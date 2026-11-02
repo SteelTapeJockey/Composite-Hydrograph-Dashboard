@@ -249,7 +249,6 @@ button.btn.active{background:var(--accent-soft); border-color:var(--accent); col
 #chart-box{flex:1 1 auto; min-height:0; position:relative;}
 #chart-box canvas{position:absolute; inset:0;}
 #comp-strip canvas{position:absolute; inset:0;}
-#precip-strip canvas{position:absolute; inset:0;}
 
 
 #yr-slider{position:relative; height:26px; margin:2px 4px;}
@@ -438,6 +437,7 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
   <div id="brand">
     <span class="mark">Composite Hydrograph Explorer</span>
     <span class="sub">nm groundwater levels — geoserver summary</span>
+    <a href="drought.html" class="pill" style="margin-left:12px; text-decoration:none; color:inherit;" title="Compare water levels with precipitation and drought">Drought vs water level →</a>
   </div>
   <div class="spacer"></div>
   <div class="pill" id="wellcount-pill">Loading wells…</div>
@@ -814,12 +814,6 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
           <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
             <label style="display:flex; gap:6px; align-items:center; font-size:12.5px;"><input type="checkbox" id="krig-show" checked> Show the basin-average water level (kriged) for HUC‑8 / HUC‑10 selections</label>
             <p class="hint" id="krig-status" style="margin:2px 0 8px;">Pick a HUC‑8 or HUC‑10 to see its kriged average.</p>
-            <label style="display:flex; gap:6px; align-items:center; font-size:12.5px;"><input type="checkbox" id="precip-show" checked> Show precipitation for the selected area</label>
-            <select class="selfield" id="precip-net" style="margin-top:4px;">
-              <option value="all" selected>All stations (NOAA COOP / GHCN and CoCoRaHS)</option>
-              <option value="coco">CoCoRaHS only (about 2005 on)</option>
-            </select>
-            <p class="hint" id="precip-status" style="margin:2px 0 8px;">Live from the RCC-ACIS web service when an area is selected.</p>
             <label style="display:block; font-size:12px; color:var(--ink-2);" for="ref-file">Reference hydrograph (CSV)</label>
             <p class="hint" style="margin:2px 0 4px;">Draws an outside series, such as a kriged basin average, next to the composite in the chain-linked (ft) method. Columns: <code>year</code>, <code>change_ft</code> (water-level change, positive = rising) and optional <code>se_ft</code> (standard error, shown as a 95% range). It is shifted to match the composite in the first year they share.</p>
             <input type="file" id="ref-file" accept=".csv,.txt" style="max-width:100%;">
@@ -1005,8 +999,6 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
       <div id="chart-box"><canvas id="hydrograph-canvas"></canvas></div>
       <div id="comp-strip" style="flex:0 0 112px; position:relative; display:none; border-top:1px dashed var(--border);"><canvas id="comp-canvas"></canvas></div>
       <p class="hint" id="comp-caption" style="display:none; margin:2px 8px 4px; font-size:11.5px;"></p>
-      <div id="precip-strip" style="flex:0 0 104px; position:relative; display:none; border-top:1px dashed var(--border);"><canvas id="precip-canvas"></canvas></div>
-      <p class="hint" id="precip-caption" style="display:none; margin:2px 8px 4px; font-size:11.5px;"></p>
       <div id="hydrograph-empty">
         <b>No wells selected yet</b>
         <span>Draw a polygon, pick a county/HUC‑8, or click wells on the map, then they'll appear here as one composite trend.</span>
@@ -1057,7 +1049,7 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
       <nav id="help-toc">
         <a href="#h-start">Quick start</a><a href="#h-data">Data sources</a><a href="#h-prep">Preparing readings</a><a href="#h-elev">Depth and elevation</a>
         <a href="#h-comp">Composite hydrograph</a><a href="#h-trend">Trends</a><a href="#h-groups">Groups and clusters</a><a href="#h-krig">Kriged basin average</a>
-        <a href="#h-precip">Precipitation</a><a href="#h-files">Your own files</a><a href="#h-export">Exports</a><a href="#h-limits">Limitations</a><a href="#h-refs">References</a>
+        <a href="#h-files">Your own files</a><a href="#h-export">Exports</a><a href="#h-limits">Limitations</a><a href="#h-refs">References</a>
       </nav>
 
       <h3 id="h-start">Quick start</h3>
@@ -1170,9 +1162,6 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
       <p><b>HUC-12 map.</b> The same HUC-8 models are also block-kriged for each of the 3,213 New Mexico HUC-12 subwatersheds (16 averaging points each, over the part within 5 km of a well; boundaries from the EPA EnviroAtlas WBD_NP21 simplified layer). Turn on <i>Kriged water-level change by HUC-12</i> in Layers &amp; legend to colour them by the change between a reference year and any later year, and press ▶ to step through the years. A HUC-12 is faded and dashed when the change is smaller than the larger of the two years' 95% ranges (a rough test: the range of the change itself is not stored). Hover over one to read its change; click it for a popup with a Select button that shows its kriged line beside the composite. The HUC-12 values are estimates where wells are sparse; they add detail, not accuracy: averaging them by area gives back (approximately) the HUC-8 line.</p>
       <p>The line is aligned to the composite at the model's base year (or the first shared year if the composite has no value then). It is read from <code>kriged/winter.json</code> / <code>kriged/ose_winter.json</code> when the season lies within Nov–Feb, otherwise from <code>kriged/all.json</code> / <code>kriged/ose_all.json</code>. Large OSE basins (Rio Grande, Roswell, San Juan) span very different areas, so their single average hides a lot; use HUC-8s or HUC-10s for detail. Rebuild scripts are listed in <code>kriged/README.md</code>.</p>
 
-      <h3 id="h-precip">Precipitation and the drought comparison</h3>
-      <p>When an area (or a set of wells) is selected, the tool fetches monthly precipitation for every station in it, live from the <b>RCC-ACIS</b> web service (Regional Climate Centers' Applied Climate Information System). ACIS serves NOAA Cooperative Observer and GHCN-Daily stations, some back to the 1890s, and CoCoRaHS volunteer stations (about 740 in New Mexico, mostly since 2005); you can limit it to CoCoRaHS. Each station's monthly totals become yearly totals (calendar or water year, as the chart; years with fewer than 10 complete months are skipped). Stations come and go just like wells, so the yearly series for the area uses the same matched fit as the composite: each station is compared with itself, and the area's level is the average station level. The bars under the chart are blue in wetter-than-average years and brown in drier ones.</p>
-      <p><b>Drought comparison</b> (after Bloomfield and Marchant, 2013): the composite's median line, with its long-term Theil–Sen trend removed and in water-level sense, is correlated with standardized precipitation (normal scores of the average over the last k years, k = 1 to 15). The tool reports the k with the highest correlation. A strong link means water levels rise and fall with wet and dry spells; a weak or no link usually means pumping or other causes dominate. Annual values are autocorrelated, so treat the correlation as descriptive.</p>
       <h3 id="h-files">Your own files</h3>
       <ul>
         <li><b>Add readings from a file:</b> a CSV with <code>source</code> and <code>id</code> (or <code>feature_id</code>), <code>date</code> and <code>depth_to_water</code>, or the OFR-vs-API workbook. Readings are added to wells already in the tool and kept in your browser until removed.</li>
@@ -1211,8 +1200,6 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <li>Theil, H., 1950, A rank-invariant method of linear and polynomial regression analysis: Proceedings of the Royal Netherlands Academy of Sciences, v. 53, p. 386–392, 521–525, 1397–1412.</li>
         <li>U.S. Geological Survey, 3D Elevation Program (3DEP) elevation service: elevation.nationalmap.gov.</li>
         <li>U.S. Geological Survey, Watershed Boundary Dataset (HUC-8 and HUC-10).</li>
-        <li>RCC-ACIS web services (data.rcc-acis.org): NOAA COOP / GHCN-Daily and CoCoRaHS precipitation.</li>
-        <li>CoCoRaHS, Community Collaborative Rain, Hail and Snow Network (cocorahs.org).</li>
         <li>New Mexico Office of the State Engineer, Declared Groundwater Basins (NM OSE WRAP GIS feature service).</li>
         <li>New Mexico Unified Water Data API; NMBGMR open-file reports (geoinfo.nmt.edu) via the "OFR water levels vs API" workbook.</li>
       </ul>
@@ -4127,8 +4114,6 @@ function syncOtUi(){
   document.getElementById('ot-cell').value = String(o.cellKm || 0);
   document.getElementById('ot-fixed').value = String(o.fixed || 0);
 }
-document.getElementById('precip-show').addEventListener('change', () => renderChart());
-document.getElementById('precip-net').addEventListener('change', () => renderChart());
 document.getElementById('ot-cell').addEventListener('change', e=>{ state.otp.cellKm = +e.target.value; renderChart(); });
 document.getElementById('ot-fixed').addEventListener('change', e=>{ state.otp.fixed = +e.target.value; renderChart(); });
 document.getElementById('ot-method').addEventListener('change', e=>{ state.otp.method = e.target.value; syncOtUi(); renderChart(); if(state.krig){ state.krig = null; krigUpdate(); } });
@@ -4630,115 +4615,6 @@ function renderAllWells(set){
   const el = document.getElementById('explain-text');
   if(el) el.textContent = `Overview mode: each of the ${shown.length} wells is drawn on its own with one value per year that has readings — no shared-year matching, no composite mean/median. ${noData ? noData+' selected well(s) have no readings under the current settings and are not shown. ' : ''}Click a line to highlight that well on the map and open its card (the card has a \"Plot this well & export\" button for its own hydrograph with CSV / GeoJSON / image export). Turn off "Overview" to return to the composite.`;
 }
-// ---- precipitation (RCC-ACIS) ----
-const ACIS_URL = 'https://data.rcc-acis.org/MultiStnData';
-const precip = {cache: new Map(), seq: 0, chart: null, last: null};
-function precipArea(result){
-  const sel = state.areaSelection;
-  let polys = sel && sel.polygons && sel.polygons.length ? sel.polygons : null, bb = null;
-  if(polys){ bb = [Infinity, Infinity, -Infinity, -Infinity]; polys.forEach(p => p[0].forEach(([x, y]) => { bb[0] = Math.min(bb[0], x); bb[1] = Math.min(bb[1], y); bb[2] = Math.max(bb[2], x); bb[3] = Math.max(bb[3], y); })); }
-  else if(result && result.qualifying && result.qualifying.length && state.clickSelectedSites.size){
-    bb = [Infinity, Infinity, -Infinity, -Infinity]; result.qualifying.forEach(s => { const r = SITES[s]; if(r[1] == null) return; bb[0] = Math.min(bb[0], r[1]); bb[1] = Math.min(bb[1], r[2]); bb[2] = Math.max(bb[2], r[1]); bb[3] = Math.max(bb[3], r[2]); });
-    bb = [bb[0] - 0.1, bb[1] - 0.1, bb[2] + 0.1, bb[3] + 0.1];
-  }
-  if(!bb || !isFinite(bb[0])) return null;
-  return {bb, pieces: polys ? piecesFromPolys(polys) : null, key: (sel ? sel.label : 'wells:' + result.qualifying.length) + '|' + bb.map(v => v.toFixed(3)).join(',')};
-}
-async function precipFetch(area, y0, net){
-  const key = area.key + '|' + y0 + '|' + net;
-  if(precip.cache.has(key)) return precip.cache.get(key);
-  const now = new Date(), ed = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-  const body = {bbox: area.bb.map(v => v.toFixed(4)).join(','), sdate: Math.max(1895, y0 - 1) + '-01', edate: ed,
-    elems: [{name: 'pcpn', interval: 'mly', duration: 'mly', reduce: 'sum', maxmissing: 3}], meta: ['name', 'sids', 'll']};
-  const r = await fetch(ACIS_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
-  if(!r.ok) throw new Error('ACIS HTTP ' + r.status);
-  const j = await r.json(); if(j.error) throw new Error(j.error);
-  const sy = Math.max(1895, y0 - 1);
-  let st = (j.data || []).map(d => ({name: d.meta.name, ll: d.meta.ll, coco: (d.meta.sids || []).some(s => / 10$/.test(s)), m: d.data.map(v => { const x = v[0]; return x === 'M' || x == null ? null : (x === 'T' ? 0 : parseFloat(x)); })}));
-  if(area.pieces){ const inside = st.filter(s => s.ll && pointInPieces(s.ll[0], s.ll[1], area.pieces)); if(inside.length >= 3) st = inside; }
-  const out = {stations: st, sy};
-  precip.cache.set(key, out); return out;
-}
-// yearly totals per station (calendar or water year, at least 10 of 12 months), then the area series with the same
-// matched fit as the composite (station = its own level), so stations opening and closing don't move it
-function precipSeries(P, years, net){
-  const wy = state.waterYear, maps = [];
-  P.stations.filter(s => net === 'all' || s.coco).forEach(s => {
-    const by = new Map();
-    s.m.forEach((v, i) => { const y0 = P.sy + Math.floor(i / 12), mo = i % 12 + 1, y = wy && mo >= 10 ? y0 + 1 : y0; let a = by.get(y); if(!a){ a = {s:0, n:0}; by.set(y, a); } if(v != null){ a.s += v; a.n++; } });
-    const m = new Map(); by.forEach((a, y) => { if(a.n >= 10) m.set(y, a.s * 12 / a.n); });
-    if(m.size >= 5) maps.push(m);
-  });
-  if(!maps.length) return null;
-  const allY = []; for(let y = years[0]; y <= years[years.length - 1]; y++) allY.push(y);
-  const c = otFixedEffects(maps, allY, 1, 0);
-  // absolute level: mean station level + year effect (centred)
-  const eff = [...c.eff].filter(isFinite), lev = eff.reduce((a, b) => a + b, 0) / Math.max(1, eff.length);
-  const vals = c.mean.filter(v => v != null), mb = vals.reduce((a, b) => a + b, 0) / Math.max(1, vals.length);
-  const tot = allY.map((y, i) => c.mean[i] == null ? null : Math.max(0, lev + c.mean[i] - mb));
-  const nSt = allY.map(y => maps.filter(m => m.has(y)).length);
-  return {years: allY, tot, nSt, nStations: maps.length};
-}
-// drought comparison: correlation of the (detrended) composite with standardized precipitation over the last k years
-function precipCorrelation(result, S){
-  const o = state.otp, sign = (otFeet(o.method) && state.valueMode === 'depth') ? -1 : 1;
-  const yv = result.xvals.map((y, i) => [y, result.medianSeries[i] == null ? null : sign * result.medianSeries[i]]).filter(p => p[1] != null);
-  if(yv.length < 10) return null;
-  const ts = OT.theilSen(yv.map(p => p[0]), yv.map(p => p[1])), res = new Map(yv.map(p => [p[0], p[1] - (ts.intercept + ts.slope * p[0])]));
-  const P = new Map(S.years.map((y, i) => [y, S.tot[i]]));
-  let best = null;
-  for(let k = 1; k <= 15; k++){
-    const acc = []; S.years.forEach(y => { let s = 0, n = 0; for(let j = 0; j < k; j++){ const v = P.get(y - j); if(v != null){ s += v; n++; } } if(n === k) acc.push([y, s / k]); });
-    if(acc.length < 10) continue;
-    const ns = OT.normalScores(acc.map(p => p[1])), spi = new Map(acc.map((p, i) => [p[0], ns[i]]));
-    const pr = []; res.forEach((v, y) => { if(spi.has(y)) pr.push([spi.get(y), v]); });
-    if(pr.length < 10) continue;
-    const mx = OT.mean(pr.map(p => p[0])), my = OT.mean(pr.map(p => p[1]));
-    let sxy = 0, sxx = 0, syy = 0; pr.forEach(([x, y]) => { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; syy += (y - my) ** 2; });
-    const r = sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : 0;
-    if(!best || r > best.r) best = {k, r, n: pr.length};
-  }
-  return best;
-}
-async function precipUpdate(result){
-  const box = document.getElementById('precip-strip'), cap = document.getElementById('precip-caption'), st = document.getElementById('precip-status');
-  const my = ++precip.seq;
-  const hide = msg => { if(precip.chart){ precip.chart.destroy(); precip.chart = null; } box.style.display = 'none'; cap.style.display = 'none'; if(st && msg != null) st.textContent = msg; };
-  if(!document.getElementById('precip-show').checked) return hide('');
-  if(!result || !result.xvals || !result.xvals.length || state.showAllWells) return hide('Live from the RCC-ACIS web service when an area is selected.');
-  const area = precipArea(result); if(!area) return hide('Select an area (or wells) to see its precipitation.');
-  const net = document.getElementById('precip-net').value;
-  const y0 = Math.max(1895, result.xvals[0]);
-  if(st) st.textContent = 'Loading precipitation from RCC-ACIS…';
-  let P; try{ P = await precipFetch(area, y0, net); }catch(e){ if(my === precip.seq) hide('Could not load precipitation: ' + (e.message || e)); return; }
-  if(my !== precip.seq) return;
-  const S = precipSeries(P, result.xvals, net);
-  if(!S || !S.tot.some(v => v != null)) return hide(`No precipitation stations with 5+ complete years in this area${net === 'coco' ? ' (CoCoRaHS only)' : ''}.`);
-  const tot = result.xvals.map(y => { const i = S.years.indexOf(y); return i >= 0 ? S.tot[i] : null; });
-  const vals = tot.filter(v => v != null), mean = OT.mean(vals);
-  const css = getComputedStyle(document.documentElement), muted = css.getPropertyValue('--muted').trim() || '#888', border = css.getPropertyValue('--border').trim() || '#ddd';
-  if(precip.chart){ precip.chart.destroy(); precip.chart = null; }
-  box.style.display = 'block'; cap.style.display = 'block';
-  precip.chart = new Chart(document.getElementById('precip-canvas').getContext('2d'), {
-    type: 'bar',
-    data: {labels: result.labels, datasets: [
-      {type: 'bar', label: 'Precipitation, in/yr (' + (state.waterYear ? 'water year' : 'calendar year') + ')', data: tot, backgroundColor: tot.map(v => v == null ? 'transparent' : v >= mean ? 'rgba(47,127,193,.65)' : 'rgba(176,112,45,.65)'), borderWidth: 0, barPercentage: 0.9, categoryPercentage: 1},
-      {type: 'line', label: 'Average ' + mean.toFixed(1) + ' in', data: tot.map(() => mean), borderColor: muted, borderDash: [4, 3], borderWidth: 1, pointRadius: 0}]},
-    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: 'index', intersect: false},
-      plugins: {legend: {display: true, position: 'top', align: 'start', labels: {boxWidth: 14, font: {size: 10.5}, color: muted}},
-        tooltip: {callbacks: {label: c => c.raw == null ? '' : `${c.dataset.label.split(',')[0]}: ${c.raw.toFixed(1)} in` + (c.datasetIndex === 0 ? ` (${S.nSt[S.years.indexOf(+c.label)] || 0} stations)` : '')}}},
-      scales: {x: {display: false}, y: {min: 0, grid: {color: border}, ticks: {color: muted, maxTicksLimit: 3}, title: {display: true, text: 'in', color: muted},
-          afterFit: ax => { if(chart && chart.scales.y) ax.width = chart.scales.y.width; }},
-        y2: {position: 'right', display: true, grid: {display: false}, ticks: {display: false}, afterFit: ax => { if(chart && chart.scales.yN) ax.width = chart.scales.yN.width; }}}}
-  });
-  const C = precipCorrelation(result, S);
-  const nCoco = P.stations.filter(s => s.coco).length;
-  cap.textContent = `Precipitation: ${S.nStations} stations with 5+ complete years (${nCoco} of the ${P.stations.length} stations in the area report to CoCoRaHS), combined with the same matched fit as the composite, so stations opening and closing don't move it. Blue = wetter than average, brown = drier. ` +
-    (C ? (C.r < 0.1 ? `Drought comparison: no clear link between the composite (trend removed) and precipitation over the last 1 to 15 years (best r = ${C.r.toFixed(2)}, ${C.n} years). Water levels here follow pumping or other causes more than rain and snow.` : `Drought comparison: the composite (trend removed) follows the precipitation of the last ${C.k} year${C.k > 1 ? 's' : ''} most closely (r = ${C.r.toFixed(2)}, ${C.n} years; both standardized, as in Bloomfield & Marchant 2013). ` + (C.r < 0.3 ? 'A weak link: water levels here follow pumping or other causes more than rain and snow.' : C.r < 0.6 ? 'A moderate link.' : 'A strong link: water levels here respond to wet and dry spells.')) : 'Too few overlapping years for the drought comparison.');
-  if(st) st.textContent = `${S.nStations} precipitation station${S.nStations === 1 ? '' : 's'} used (RCC-ACIS: ${net === 'coco' ? 'CoCoRaHS only' : 'NOAA COOP / GHCN and CoCoRaHS'}).`;
-  precip.last = {result, S, C};
-  window._lastPrecip = {years: result.xvals, tot, best: C};
-}
 let compChart = null;
 function renderCompStrip(result){
   const box = document.getElementById('comp-strip'), cap = document.getElementById('comp-caption');
@@ -4777,7 +4653,6 @@ function compositeAxisTitle(){
 }
 function renderChart(){
   try{ renderCompStrip(null); }catch(e){}
-  try{ precipUpdate(null); }catch(e){}
   const empty = document.getElementById('hydrograph-empty');
   const canvas = document.getElementById('hydrograph-canvas');
   const set = state.activeSet;
@@ -5070,7 +4945,6 @@ function renderChart(){
 
   window._lastComposite = {labels, xvals, meanSeries, medianSeries, minSeries, maxSeries, nSeries, anchorSeries: result.anchorSeries, band: result.band, qualifying, poolSize, perWell, wells: result.wells, ids: qualifying.map(s=>SITES[s][0]), method: o.method, compTrend: result.compTrend, prov: null};
   try{ renderCompStrip(result); }catch(e){ console.warn('strip', e); }
-  try{ precipUpdate(result); }catch(e){ console.warn('precip', e); }
   document.getElementById('despike-removed-note').textContent = state.despike.enabled
     ? (despikeRemoved > 0 ? `${despikeRemoved} likely bad reading(s) removed from wells in this composite.` : 'No likely bad readings found in this composite.')
     : '';
@@ -5188,7 +5062,6 @@ document.getElementById('btn-export-hydrograph').addEventListener('click', ()=>{
     const header = ['year','median_'+u,'mean_'+u,'boot95_lo_'+u,'boot95_hi_'+u, c.method === 'chain' ? 'n_wells_in_step' : 'n_wells_in_year','n_wells_qualifying','method'];
     const R = window._lastRef; if(R) header.push('reference_' + R.name.replace(/[^A-Za-z0-9]+/g,'_') + '_ft', 'reference_se_ft');
     const KR = window._lastKrig; if(KR) header.push('basin_average_kriged_ft', 'basin_average_kriged_se_ft');
-    const PR = window._lastPrecip && document.getElementById('precip-show').checked ? window._lastPrecip : null; if(PR) header.push('precipitation_in');
     if(c.method === 'chain') header.push('step_from_year');
     const includeWells = state.showSpaghetti && c.perWell && c.perWell.length;
     if(includeWells) c.perWell.forEach(pw => { const nm = nmbgmrIdOf(pw.site); header.push('well_'+SITES[pw.site][0] + ((nm && nm !== SITES[pw.site][0]) ? ' (NMBGMR '+nm+')' : '')); });
@@ -5197,7 +5070,6 @@ document.getElementById('btn-export-hydrograph').addEventListener('click', ()=>{
       const row = [label, f(c.medianSeries[i]), f(c.meanSeries[i]), f(c.minSeries[i]), f(c.maxSeries[i]), c.nSeries[i], c.qualifying.length, c.method];
       if(R) row.push(f(R.val[i]), f(R.se[i]));
       if(KR) row.push(f(KR.val[i]), f(KR.se[i]));
-      if(PR){ const k = PR.years.indexOf(c.xvals[i]); row.push(k >= 0 ? f(PR.tot[k]) : ''); }
       if(c.method === 'chain') row.push(c.anchorSeries && c.anchorSeries[i] != null ? c.anchorSeries[i] : '');
       if(includeWells) c.perWell.forEach(pw => row.push(f(pw.values[i])));
       rows.push(row);
