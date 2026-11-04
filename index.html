@@ -1555,10 +1555,9 @@ async function dataBootstrap(){
   }
   agg.seen = null;
   ui.set('Preparing wells…', 0.95);
-  // ---- 3. keep wells that have readings; build the rows the app uses
-  const have = new Set(); agg.mon.forEach((a, mk)=>have.add(Math.floor(Math.floor(mk/64)/100000)));
+  // ---- 3. every well the API returned is kept (wells without readings too); build the rows the app uses
   const finalOf = new Map(); const keptRows = [];
-  rows.forEach((r, i)=>{ if(have.has(i)){ finalOf.set(i, keptRows.length); keptRows.push(r); } });
+  rows.forEach((r, i)=>{ finalOf.set(i, keptRows.length); keptRows.push(r); });
   const sources = SOURCE_ORDER.slice(); keptRows.forEach(r=>{ if(r[0] && !sources.includes(r[0])) sources.push(r[0]); });
   const enrichIdx = new Map(); ENRICH.id.forEach((id, i)=>enrichIdx.set(ENRICH.src[i] + '\u0001' + id, i));
   const aquifers = ENRICH.aquifers.slice(), formations = ENRICH.formations.slice();
@@ -2528,10 +2527,12 @@ function restyleMarkers(){
   for(let s=0; s<NSITES; s++){
     const m = markers[s];
     if(!m) continue;
-    const inActive = state.activeSet.has(s);
+    // a well merged into its multi-agency partner is the same physical well: draw it as its partner is drawn
+    const k = clusterKeep.has(s) ? clusterKeep.get(s) : s;
+    const inActive = state.activeSet.has(k);
     // with a composite drawn, show just the wells in it (plus manually excluded ones so they can be restored);
     // otherwise (no composite / overview mode) show every well in the selection
-    const showSet = useQual ? (state.qualifyingSites.has(s) || (state.excludedSites.has(s) && state.algoQualifyingSites.has(s)) || state.chartHighlightSite === s) : inActive;
+    const showSet = useQual ? (state.qualifyingSites.has(k) || (state.excludedSites.has(k) && state.algoQualifyingSites.has(k)) || state.chartHighlightSite === s) : inActive;
     const hide = (state.onlySelected && hasSelNow && !showSet) || (!hasSelNow && zoomGate);
     if(hide !== !!markerHidden[s]){
       markerHidden[s] = hide ? 1 : 0;
@@ -2540,8 +2541,8 @@ function restyleMarkers(){
     }
     if(hide) continue;
     const clicked = state.clickSelectedSites.has(s);
-    const qualifying = state.qualifyingSites.has(s);
-    const excluded = state.excludedSites.has(s) && state.algoQualifyingSites.has(s);
+    const qualifying = state.qualifyingSites.has(k);
+    const excluded = state.excludedSites.has(k) && state.algoQualifyingSites.has(k);
     const chartHi = state.chartHighlightSite === s;
     let radius = 3, weight = 0.6, color = '#222';
     if(excluded){ radius = 5.5; weight = 2; color = '#c1652f'; }
@@ -2582,11 +2583,12 @@ function popupHtml(s){
   const usgsWaterdataUrl = (typeof id === 'string' && id.startsWith('USGS-'))
     ? `https://waterdata.usgs.gov/monitoring-location/${id}/#dataTypeId=measurements-72019-0&period=P1Y`
     : null;
-  const inComposite = state.qualifyingSites.has(s);
-  const algoQualifies = state.algoQualifyingSites.has(s);
-  const isExcluded = state.excludedSites.has(s);
+  const kq = clusterKeep.has(s) ? clusterKeep.get(s) : s;
+  const inComposite = state.qualifyingSites.has(kq);
+  const algoQualifies = state.algoQualifyingSites.has(kq);
+  const isExcluded = state.excludedSites.has(kq);
   const excludeBtn = algoQualifies
-    ? `<button class="btn" id="pop-exclude-${s}">${isExcluded ? 'Include in composite' : 'Exclude from composite'}</button>`
+    ? `<button class="btn" id="pop-exclude-${s}">${isExcluded ? 'Include in composite' : 'Exclude from composite'}</button>` + (kq !== s ? `<div class="kv" style="font-size:11px; color:var(--muted);"><span>Its readings are merged into ${escHtml(String(SITES[kq][0]))} (same well, other agency); this button acts on that merged well.</span></div>` : '')
     : '';
   return `<div class="pop">
     <h6>${id}</h6>
@@ -2655,8 +2657,9 @@ function showWellPopup(s, m){
     if(plotBtn) plotBtn.addEventListener('click', ()=>{ openSingleWell(s); });
     const exBtn = document.getElementById('pop-exclude-'+s);
     if(exBtn) exBtn.addEventListener('click', ()=>{
-      if(state.excludedSites.has(s)) state.excludedSites.delete(s);
-      else state.excludedSites.add(s);
+      const kq = clusterKeep.has(s) ? clusterKeep.get(s) : s;
+      if(state.excludedSites.has(kq)) state.excludedSites.delete(kq);
+      else state.excludedSites.add(kq);
       renderChart();
       m.closePopup();
     });
@@ -2880,7 +2883,7 @@ document.getElementById('reset-filters').addEventListener('click', ()=>{
 function passesFilters(s){
   const rec = SITES[s];
   const f = state.filters;
-  if(!rec[5]) return false;                                   // no readings under the current reading-quality settings
+  if(!rec[5] && state.readQ && !readQDefault()) return false;               // no readings left under the reading-quality filters you set
   if((state.yearWindow.min != null || state.yearWindow.max != null) && siteNYears[s] === 0) return false;
   if(f.api && !passesApiFilters(s, f.api)) return false;
   if(rec[3]>=0 && !f.sources.has(rec[3])) return false;
@@ -5629,6 +5632,7 @@ async function apiLoadClusters(){
   });
   // static NMBGMR pairs that the API did not return still de-duplicate sensibly
   otherOfNmbgmr.forEach((list, n)=> list.forEach(o=>{ if(!clusterInfo.has(o.idx)){ clusterDropSet.add(o.idx); if(!clusterKeep.has(o.idx)) clusterKeep.set(o.idx, n); } }));
+  clusterKeep.forEach((k, s) => { let t = k, guard = 0; while(clusterKeep.has(t) && guard++ < 20) t = clusterKeep.get(t); if(t === s){ clusterKeep.delete(s); clusterDropSet.delete(s); } else clusterKeep.set(s, t); });
   apiState.clusters = {n:nClusters, wells:clusterPeers.size};
   refreshMultiRings(); mergeApplied = null; if(!syncMerge()) recomputeActiveSet(); renderLegend();
   const el = document.getElementById('multi-count'); if(el) el.textContent = isFinite(apiState.clusters.wells) ? apiState.clusters.wells.toLocaleString() : '';
