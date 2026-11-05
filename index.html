@@ -245,8 +245,9 @@ button.btn.active{background:var(--accent-soft); border-color:var(--accent); col
 #drawer-controls{
   width:270px; flex:0 0 auto; border-right:1px solid var(--border); padding:12px 14px; overflow-y:auto;
 }
-#drawer-chartwrap{flex:1; min-width:0; padding:10px 16px 6px; position:relative; display:flex; flex-direction:column;}
-#chart-box{flex:1 1 auto; min-height:0; position:relative;}
+#drawer-chartwrap{flex:1; min-width:0; padding:10px 16px 6px; position:relative; display:flex; flex-direction:column; overflow-y:auto;}
+#chart-box{flex:1 0 auto; min-height:260px; position:relative;}
+#comp-caption a{cursor:pointer; color:var(--accent);}
 #chart-box canvas{position:absolute; inset:0;}
 #comp-strip canvas{position:absolute; inset:0;}
 
@@ -437,7 +438,6 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
   <div id="brand">
     <span class="mark">Composite Hydrograph Explorer</span>
     <span class="sub">nm groundwater levels — geoserver summary</span>
-    <a href="drought.html" class="pill" style="margin-left:12px; text-decoration:none; color:inherit;" title="Compare water levels with precipitation and drought">Drought vs water level →</a>
   </div>
   <div class="spacer"></div>
   <div class="pill" id="wellcount-pill">Loading wells…</div>
@@ -1814,6 +1814,9 @@ const clusterPeers = new Map();   // site idx -> [peer site idx at other agencie
 const clusterInfo = new Map();    // site idx -> {cid, linked, method, conf}
 const clusterDropSet = new Set(); // wells dropped by the "one well per cluster" de-duplication filter
 const clusterKeep = new Map();     // dropped well -> the well that represents its cluster (receives its readings when merging)
+const LINK_MAX_KM = 1;   // a multi-agency link must join wells within this distance (same physical well)
+function siteKm(a, b){ const A = SITES[a], B = SITES[b]; if(A[1] == null || B[1] == null) return Infinity; return Math.hypot((A[1]-B[1])*111.32*Math.cos(34.4*Math.PI/180), (A[2]-B[2])*110.57); }
+const linkRejected = [];   // [a, b, km] links ignored because the wells are too far apart
 const nmbgmrOfOther = new Map();   // other-agency well index -> {idx, id, alt}
 const otherOfNmbgmr = new Map();   // NMBGMR well index -> [{idx, id, source}]
 {
@@ -1821,6 +1824,7 @@ const otherOfNmbgmr = new Map();   // NMBGMR well index -> [{idx, id, source}]
   NMBGMR_LINKS_RAW.forEach(([otherId, nmId, , alt])=>{
     const o = byId.get(otherId), n = byId.get(nmId);
     if(o==null || n==null || o===n) return;
+    { const km = siteKm(o, n); if(km > LINK_MAX_KM){ linkRejected.push([o, n, km]); return; } }
     nmbgmrOfOther.set(o, {idx:n, id:nmId, alt:alt||''});
     if(!otherOfNmbgmr.has(n)) otherOfNmbgmr.set(n, []);
     otherOfNmbgmr.get(n).push({idx:o, id:otherId, source: SITES[o][3]>=0 ? SOURCES[SITES[o][3]] : 'other'});
@@ -4624,7 +4628,15 @@ function renderCompStrip(result){
   if(compChart){ compChart.destroy(); compChart = null; }
   const C = result && result.composition;
   if(!C || !chart || state.showAllWells){ box.style.display = 'none'; cap.style.display = 'none'; return; }
-  box.style.display = 'block'; cap.style.display = 'block';
+  window._compLast = result;
+  cap.style.display = 'block';
+  if(!C.warn && !state.compOpen){
+    box.style.display = 'none';
+    cap.innerHTML = 'Composition check: no warning (the wells measured stay representative of the whole set). <a id="comp-toggle">Show the check ▸</a>';
+    document.getElementById('comp-toggle').onclick = () => { state.compOpen = true; renderCompStrip(window._compLast); };
+    return;
+  }
+  box.style.display = 'block';
   const css = getComputedStyle(document.documentElement), muted = css.getPropertyValue('--muted').trim() || '#888', border = css.getPropertyValue('--border').trim() || '#ddd';
   const dep = state.valueMode === 'depth';
   const lv = C.lvl.filter(v => v != null), mx = lv.length ? Math.max(...lv.map(Math.abs)) : 0;
@@ -4646,7 +4658,8 @@ function renderCompStrip(result){
   const warnHtml = C.warn ? `<span style="display:block; margin-bottom:3px; padding:4px 8px; border-left:3px solid #b45309; background:rgba(180,83,9,.08); color:var(--ink-1);"><b>Warning: where the wells are changes.</b> Around ${S.from}–${S.to} the wells measured sit about ${S.km.toFixed(0)} km from the centre of all the wells (the wells are spread about ${S.rad.toFixed(0)} km around it), and those wells' own long-term trends differ from the rest by about ${Math.abs(S.dslope).toFixed(1)} ft/yr (typical well: ${S.sAll >= 0 ? '+' : ''}${S.sAll.toFixed(2)} ft/yr, + = rising). No composite can correct for this, matched wells included; trust the kriged basin average for those years, or split the area (Group by, HUC-10, or a smaller selection).</span>` : '';
   cap.innerHTML = warnHtml + escHtml(`Composition check: how the wells measured each year differ from the whole set. If the composite moves together with these lines, part of that change may come from which wells were measured, not from the water. ` +
     (mx ? `The typical ${dep ? 'depth to water' : 'water elevation'} of the measured wells swings by up to ${mx.toFixed(0)} ft from year to year; ` : '') +
-    (state.otp.method === 'fe' ? 'the matched-wells composite already removes each well\'s own level, so these swings do not enter it.' : 'switch to matched wells to remove each well\'s own level from the composite.'));
+    (state.otp.method === 'fe' ? 'the matched-wells composite already removes each well\'s own level, so these swings do not enter it.' : 'switch to matched wells to remove each well\'s own level from the composite.')) + (C.warn ? '' : ' <a id="comp-toggle">Hide ▴</a>');
+  { const t = document.getElementById('comp-toggle'); if(t) t.onclick = () => { state.compOpen = false; renderCompStrip(window._compLast); }; }
 }
 function compositeAxisTitle(){
   const m = state.otp.method;
@@ -5609,7 +5622,14 @@ async function apiLoadClusters(){
   clusterPeers.clear(); clusterInfo.clear(); clusterDropSet.clear(); clusterKeep.clear();
   let nClusters = 0;
   groups.forEach((g, cid)=>{
-    const mem = [...g.members];
+    // keep only the members within LINK_MAX_KM of the cluster's best-placed member (most others nearby)
+    let mem = [...g.members];
+    if(mem.length > 1){
+      const near = s => mem.filter(o => siteKm(s, o) <= LINK_MAX_KM).length;
+      const core = mem.slice().sort((a, b) => near(b) - near(a))[0];
+      const out = mem.filter(o => siteKm(core, o) > LINK_MAX_KM); out.forEach(o => linkRejected.push([o, core, siteKm(o, core)]));
+      mem = mem.filter(o => siteKm(core, o) <= LINK_MAX_KM);
+    }
     const agencies = new Set(mem.map(s=>SITES[s][3]));
     if(agencies.size < 2) return;
     nClusters++;
