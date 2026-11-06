@@ -607,7 +607,7 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <select class="selfield" id="ose-select">
           <option value="">Loading OSE basins…</option>
         </select>
-        <p class="hint" id="ose-hint">The 39 declared groundwater basins administered by the NM Office of the State Engineer, fetched live from OSE. Their kriged basin averages are drawn in the chain-linked method.</p>
+        <p class="hint" id="ose-hint">The 39 declared groundwater basins administered by the NM Office of the State Engineer, fetched live from OSE.</p>
       </div>
       <div class="section">
         <h4>HUC‑8 subbasin</h4>
@@ -700,7 +700,14 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
             </optgroup>
         </select>
         <div class="row"><label><input type="checkbox" id="layer-counties"> County boundaries</label></div>
-        <div class="row"><label><input type="checkbox" id="layer-h12krig"> Kriged water-level change by HUC‑12 (map by year)</label></div>
+        <div class="row" style="display:none;"><label for="layer-krigmap" style="display:block; margin-bottom:2px;">Kriged water-level change (map by year)</label>
+          <select class="selfield" id="layer-krigmap" style="width:100%;">
+            <option value="off" selected>Off</option>
+            <option value="ose">OSE groundwater basins</option>
+            <option value="huc8">HUC‑8 subbasins</option>
+            <option value="huc10">HUC‑10 watersheds</option>
+            <option value="huc12">HUC‑12 subwatersheds</option>
+          </select></div>
         <div class="row"><label><input type="checkbox" id="layer-ose"> OSE groundwater basins</label></div>
         <div class="row"><label><input type="checkbox" id="layer-huc"> HUC‑8 subbasins</label></div>
         <div class="row"><label><input type="checkbox" id="layer-aquext"> Aquifer extents (all)</label></div>
@@ -758,14 +765,11 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <button class="acc-head" type="button"><span class="acc-title">Composite method</span><span class="acc-sum" id="sum-schedule"></span><span class="acc-caret">▸</span></button>
         <div class="acc-body">
         <div class="section">
-          <p class="hint" style="margin-top:0;"><b>Over the Top method.</b> Each well gets one value per year, is checked for spikes, and must have enough years of record. Its values are then standardized (or turned into year-to-year changes), and every year with enough wells gets the median across wells, with a 95% bootstrap band. A well counts in every year it was measured: no schedule, no bins, nothing shifted between years.</p>
+          <p class="hint" style="margin-top:0;"><b>Over the Top method.</b> Each well gets one value per year, is checked for spikes, and must have enough years of record. The wells are then fitted together so each well is compared only with itself, and every year with enough wells gets a value in feet of change, with a 95% bootstrap band. A well counts in every year it was measured: no schedule, no bins, nothing shifted between years.</p>
           <label style="display:block; font-size:12px; color:var(--ink-2); margin-top:4px;">Composite</label>
           <select class="selfield" id="ot-method">
-            <option value="units">Area units (ft): matched wells per HUC-10, then weighted by area</option>
             <option value="fe" selected>Matched wells (ft): each well against itself, all years at once</option>
-            <option value="chain">Chain-linked change (ft), median year-to-year steps</option>
-            <option value="ns">Normal score (SGI-style), median of wells</option>
-            <option value="z">Z-score, median of wells</option>
+            <option value="units">Area units (ft): matched wells per HUC-10, then weighted by area</option>
           </select>
           <p class="hint" id="ot-method-hint" style="margin-top:4px;"></p>
           <label style="display:block; font-size:12px; color:var(--ink-2); margin-top:8px;">Area weighting</label>
@@ -812,10 +816,10 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
           </div>
           <p class="hint" style="margin-top:6px;">Years with fewer wells than the minimum are left empty (red bars under the chart); years with fewer than 10 wells are drawn with hollow markers. The trend and per-well slopes are Theil–Sen with a Mann–Kendall test. For hydrograph clusters, use <b>Splitting the data → Group by → Hydrograph clusters</b>. Starting values follow the literature (Jasechko et al. 2024; Bloomfield &amp; Marchant 2013; Bloomfield et al. 2015) and are not yet validated for New Mexico.</p>
           <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
-            <label style="display:flex; gap:6px; align-items:center; font-size:12.5px;"><input type="checkbox" id="krig-show" checked> Show the basin-average water level (kriged) for HUC‑8 / HUC‑10 selections</label>
-            <p class="hint" id="krig-status" style="margin:2px 0 8px;">Pick a HUC‑8 or HUC‑10 to see its kriged average.</p>
+            <label style="display:none;"><input type="checkbox" id="krig-show"> Show the basin-average water level (kriged) for HUC‑8 / HUC‑10 selections</label>
+            <p class="hint" id="krig-status" style="display:none;">Pick a HUC‑8 or HUC‑10 to see its kriged average.</p>
             <label style="display:block; font-size:12px; color:var(--ink-2);" for="ref-file">Reference hydrograph (CSV)</label>
-            <p class="hint" style="margin:2px 0 4px;">Draws an outside series, such as a kriged basin average, next to the composite in the chain-linked (ft) method. Columns: <code>year</code>, <code>change_ft</code> (water-level change, positive = rising) and optional <code>se_ft</code> (standard error, shown as a 95% range). It is shifted to match the composite in the first year they share.</p>
+            <p class="hint" style="margin:2px 0 4px;">Draws an outside series next to the composite (feet). Columns: <code>year</code>, <code>change_ft</code> (water-level change, positive = rising) and optional <code>se_ft</code> (standard error, shown as a 95% range). It is shifted to match the composite in the first year they share.</p>
             <input type="file" id="ref-file" accept=".csv,.txt" style="max-width:100%;">
             <p class="hint" id="ref-status" style="margin-top:4px;"></p>
             <button class="btn full hidden" id="btn-ref-clear" style="margin-top:4px;">Remove reference hydrograph</button>
@@ -859,6 +863,15 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         </div>
         <p class="hint" style="margin-top:6px;" id="despike-removed-note"></p>
         <button class="btn full" id="btn-show-flags-table" style="margin-top:8px;">📋 View flagged readings table</button>
+      </div>
+      <div class="section">
+        <h4>NMBGMR Ocotillo database</h4>
+        <label style="display:flex; gap:6px; align-items:flex-start; font-size:12.5px;"><input type="checkbox" id="oco-on" checked style="margin-top:2px;"> <span>Add readings from the Bureau's Ocotillo database that the unified API doesn't have</span></label>
+        <p class="hint" id="oco-status" style="margin-top:4px;">Wells are checked at start-up; readings are fetched when you select an area (up to 400 NMBGMR wells at a time). A month is only added when the well has no reading that month already.</p>
+        <label style="display:block; font-size:12px; color:var(--ink-2); margin-top:6px;" for="oco-key">API key for private data (optional)</label>
+        <div style="display:flex; gap:6px;"><input type="password" id="oco-key" class="selfield" autocomplete="off" placeholder="paste your Ocotillo API key" style="flex:1; min-width:0;"><button class="btn" id="oco-key-test" style="padding:2px 8px;">Test</button></div>
+        <select id="oco-key-header" hidden><option value="bearer" selected>bearer</option></select>
+        <p class="hint" id="oco-key-status" style="margin-top:4px;">The key is kept only in this browser tab (forgotten when the tab closes) and sent only to ocotillo-api.newmexicowaterdata.org. Private readings are held in memory only, never saved. With a key the tool reloads and reads Ocotillo's private endpoint (/ogcapi-internal). It is sent as an Authorization: Bearer token. Type the key yourself; don't paste it into any AI chat. Files exported while private readings are loaded are named PRIVATE_….</p>
       </div>
       <div class="section">
         <h4>Readings from published reports</h4>
@@ -1048,7 +1061,7 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
     <div id="help-body">
       <nav id="help-toc">
         <a href="#h-start">Quick start</a><a href="#h-data">Data sources</a><a href="#h-prep">Preparing readings</a><a href="#h-elev">Depth and elevation</a>
-        <a href="#h-comp">Composite hydrograph</a><a href="#h-trend">Trends</a><a href="#h-groups">Groups and clusters</a><a href="#h-krig">Kriged basin average</a>
+        <a href="#h-comp">Composite hydrograph</a><a href="#h-trend">Trends</a><a href="#h-groups">Groups and clusters</a>
         <a href="#h-files">Your own files</a><a href="#h-export">Exports</a><a href="#h-limits">Limitations</a><a href="#h-refs">References</a>
       </nav>
 
@@ -1064,13 +1077,13 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
       <h3 id="h-data">Data sources</h3>
       <ul>
         <li><b>Water levels (live):</b> the NM Unified Water Data API (wells and depth-to-water readings). It merges USGS-NWIS, the NM Bureau of Geology and Mineral Resources (NMBGMR), NM OSE/ISC SensorThings feeds (Albuquerque, Bernalillo County, PVACD, EBID, NMOSE-Roswell), the ISC Seven Rivers network and the Water Quality Portal. The readings are saved in your browser, refreshed with new readings on later visits and downloaded again in full every 30 days. A download that comes back empty or short never replaces the saved copy.</li>
+        <li><b>NMBGMR Ocotillo database (live):</b> the Bureau's own database (ocotillo-api.newmexicowaterdata.org, OGC API). At start-up the tool reads Ocotillo's list of wells with water levels and adds any the unified API lacks. When you select an area, it fetches Ocotillo's readings for the selected NMBGMR wells (up to 400 at a time, saved in the browser for 30 days), averages them by month, and adds a month only where the well has no reading that month already, so nothing is counted twice. Ocotillo serves manual and continuous-logger readings together (it can't yet separate them), so logger months count like any other month. Ocotillo's depths are below the <i>measuring point</i> (e.g. the casing top), while the unified API's are below land surface, so they can differ by the measuring-point height (0.66 ft at AR-0001). Ocotillo does not publish that height, so for each well the tool measures it: the median difference (Ocotillo − unified) over months both databases have, if there are at least 3, is subtracted from that well's added Ocotillo months. Wells with fewer than 3 shared months are added unadjusted, and the Ocotillo status line counts them. Optional: an Ocotillo API key (Data filters → NMBGMR Ocotillo database) gives access to private data through Ocotillo's /ogcapi-internal endpoint. The key is kept only in that browser tab (forgotten when it closes) and sent only to Ocotillo; private readings are held in memory and never saved. Private-only wells have no unified-API readings to measure their measuring-point offset against, so they are added unadjusted. Exports and screenshots made while a key is in use can contain private data.</li>
         <li><b>Readings from published reports:</b> <code>literature-readings.csv</code> holds readings from NMBGMR open-file reports that the API does not have yet, from the "OFR water levels vs API" comparison workbook (27,838 readings at 676 wells, 31 reports). They are added to the matching wells as manual readings. A reading is skipped when that well's month already holds the same value (±0.05 ft), so as the API takes these readings in, the file adds less and less. Readings at wells not in the API are not included because most have no location.</li>
         <li><b>Well attributes:</b> <code>nm-site-metadata.json</code>: aquifer extent (a refined 2-D aquifer-boundary dataset), aquifer-mapping study area, geologic formation, USGS principal aquifer, well depth and water-quality summaries, matched by site ID.</li>
         <li><b>Land elevation:</b> the site elevation from the API; the USGS 3D Elevation Program (3DEP) 10 m elevation service fills wells without one and checks the others (see <a href="#h-elev">Depth and elevation</a>).</li>
         <li><b>Boundaries:</b> counties; the 39 declared groundwater basins of the NM Office of the State Engineer (live from the OSE map service); HUC-8 and HUC-10 watersheds from the USGS Watershed Boundary Dataset.</li>
-        <li><b>Kriged basin averages:</b> precomputed files in <code>kriged/</code> (see <a href="#h-krig">Kriged basin average</a>).</li>
       </ul>
-      <p class="help-note">Browsers block a page opened from your own computer (a <code>file://</code> address) from reading files beside it. When the page is opened that way, the tool reads <code>kriged/</code> and <code>literature-readings.csv</code> from the GitHub site instead. Everything works fully on the GitHub site.</p>
+      <p class="help-note">Browsers block a page opened from your own computer (a <code>file://</code> address) from reading files beside it. When the page is opened that way, the tool reads <code>boundaries/</code> and <code>literature-readings.csv</code> from the GitHub site instead. Everything works fully on the GitHub site.</p>
 
       <h3 id="h-prep">Preparing readings</h3>
       <ul>
@@ -1094,19 +1107,19 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
       <p><b>The central problem is comparing like with like.</b> Different wells are measured in different years, and a plain average of whatever was measured each year moves whenever the set of wells changes. There are two separate versions of this problem:</p>
       <ul>
         <li><b>Which wells:</b> deep and shallow wells (or wells with different own levels) drop in and out of the record. The tool solves this.</li>
-        <li><b>Where the wells are:</b> the measured wells move between parts of the area that behave differently. No composite can solve this from well records alone, because nothing records what the unmeasured part did in those years. Only a spatial model that estimates it from nearby wells can, which is what the kriged basin average does.</li>
+        <li><b>Where the wells are:</b> the measured wells move between parts of the area that behave differently. No composite can fully solve this from well records alone, because nothing records what the unmeasured part did in those years. Area units and area weighting reduce it.</li>
       </ul>
       <p>Synthetic tests (300–470 wells, 1960–2020; changes 1960→1990 / 1990→2020):</p>
       <table style="border-collapse:collapse; font-size:12.5px; margin:4px 0 8px;">
         <tr><th style="text-align:left; padding:2px 10px 2px 0;">Method</th><th style="text-align:left; padding:2px 10px;">A. Which wells: deep wells measured only after 1990, every well falls 1 ft/yr</th><th style="text-align:left; padding:2px 10px;">B. Where: half the area stable, half falls 2 ft/yr; a dense wellfield in the falling half measured only after 1990</th></tr>
         <tr><td>Actual</td><td style="padding:2px 10px;">30 / 30 ft</td><td style="padding:2px 10px;">30 / 30 ft (area average)</td></tr>
         <tr><td>Matched wells, median / mean</td><td style="padding:2px 10px;">30 / 30 ft</td><td style="padding:2px 10px;">−27 / 58 and −11 / 40 ft</td></tr>
-        <tr><td>Chain-linked</td><td style="padding:2px 10px;">30 / 31 ft</td><td style="padding:2px 10px;">−44 / 58 ft</td></tr>
+        <tr><td>Chain-linked (removed)</td><td style="padding:2px 10px;">30 / 31 ft</td><td style="padding:2px 10px;">−44 / 58 ft</td></tr>
         <tr><td>Matched wells + area weighting, median / mean</td><td style="padding:2px 10px;">30 / 30 ft</td><td style="padding:2px 10px;">1 / 1 and 11 / 13 ft</td></tr>
-        <tr><td>Normal score / z-score</td><td style="padding:2px 10px;">2.0 / 1.8 and 1.7 / 1.6 SD (right shape)</td><td style="padding:2px 10px;">wrong direction early (−1.5 / 3.6 SD)</td></tr>
+        <tr><td>Normal score / z-score (removed)</td><td style="padding:2px 10px;">2.0 / 1.8 and 1.7 / 1.6 SD (right shape)</td><td style="padding:2px 10px;">wrong direction early (−1.5 / 3.6 SD)</td></tr>
         <tr><td>Plain median of depths</td><td style="padding:2px 10px;">135 / 165 ft</td><td style="padding:2px 10px;">43 / 40 ft</td></tr>
       </table>
-      <p>In case B the early years even get the wrong sign: when wells that enter late follow a steeper trend, a fit with one value per year has to push the early years the other way (an exact least-squares solution gives the same result, so this is the method, not a bug). Area weighting stops the wellfield from dominating, but a median then follows the majority of grid cells, not the area average. The tool therefore warns when this situation shows up in real data (see the composition check below), and the kriged line should be trusted over the composite in those years.</p>
+      <p>In case B the early years even get the wrong sign: when wells that enter late follow a steeper trend, a fit with one value per year has to push the early years the other way (an exact least-squares solution gives the same result, so this is the method, not a bug). Area weighting stops the wellfield from dominating, but a median then follows the majority of grid cells, not the area average. The tool therefore warns when this situation shows up in real data (see the composition check below); read those years with caution and compare with Area units.</p>
       <p>The tool's tools for comparing like with like:</p>
       <ul>
         <li><b>Matched wells</b> (default method): every well is compared only with itself (details below). It solves case A.</li>
@@ -1115,7 +1128,6 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <li><b>Area units</b> (method): within each HUC-10 the wells are combined with the matched-wells fit, then the HUC-10 series are combined the same way, each weighted by its area (the least-squares, area-weighted average). HUC-10s whose wells cover less than half of the years are pooled with the other short ones in their HUC-8. This addresses case B when each area has wells through the period: in case B with 25 km units it gives 26 / 28 ft (actual 30 / 30), against −11 / 40 for matched wells. With 10 km units (about the size of a HUC-12) it gives only 11 / 13, because most small units have short records and drop in and out; that is why HUC-10s, not HUC-12s, are the units. It cannot recreate years when part of the area had no wells at all.</li>
         <li><b>Composition check</b> (strip under the chart): for each year, how the typical level of the wells measured differs from that of all wells (ft), and how far the centre of the wells measured is from the centre of all wells (km). <b>Warning:</b> the tool warns when, over a 10-year stretch (years with at least 10 wells), the centre of the measured wells sits more than half the wells' typical spread away from the centre of all wells <i>and</i> those wells' own long-term trends (Theil–Sen) differ from the typical well's by at least 0.3 ft/yr (or half the typical trend, if larger). That is case B. In tests on 16 real areas it fired for 5 (for example Roswell basin 1915–1924, Curry County 1954–1959, Santa Fe County 1949–1958).</li>
       </ul>
-      <p>The kriged basin average is the model-based answer to the same problem and is drawn beside the feet methods.</p>
       <p>For the selected wells:</p>
       <ol>
         <li><b>Annual value per well:</b> the median of the well's monthly values in each year (default), or the reading-weighted yearly mean.</li>
@@ -1124,20 +1136,18 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <li><b>Put wells on a common scale</b>, so deep and shallow wells count equally. In each case "up" means more water.
           <ul>
             <li><b>Matched wells (ft)</b> (default): a two-way fixed-effects fit, <i>value(well, year) = a<sub>well</sub> + b<sub>year</sub></i>, to all wells at once. <i>a</i> is each well's own typical level, so it cancels out; <i>b</i> is the composite. The median line is a robust fit (weighted median polish, alternating medians until the year values change by less than 0.002 ft); the mean line is the least-squares fit. Every year is tied to every other year through all the wells they share, not through one chain, so no single link can shift the rest. Only wells and years connected to the best-measured year through shared wells are used. The line is shifted so the first plotted year is 0. This is the same idea as a repeat-sales price index (Bailey et al., 1963) and as two-way panel regression.</li>
-            <li><b>Normal score</b> (default, the Standardised Groundwater level Index idea of Bloomfield and Marchant, 2013): each well's annual values are ranked, <i>r</i> = 1…<i>n</i>, and converted with Blom's formula: <i>z</i> = Φ<sup>−1</sup>((<i>r</i> − 3/8) / (<i>n</i> + 1/4)), where Φ<sup>−1</sup> is the inverse standard normal. Robust to outliers and skew.</li>
-            <li><b>Z-score:</b> <i>z</i> = (<i>x</i> − mean) / standard deviation of the well's annual values.</li>
-            <li><b>Chain-linked change (ft):</b> the chain starts at the best-measured year and grows both ways: each year is linked to the already-linked year that shares the most wells (earlier or later; ties go to the closer year), and its step is the median (or mean) change of the wells measured in both years. The result is cumulative change in feet, shifted so the first plotted year is 0. It keeps real units but can drift where few wells link.</li>
+            <li><b>Area units (ft):</b> the matched-wells fit inside each HUC-10, then the HUC-10 series combined the same way, each weighted by its area (see the list above).</li>
           </ul>
-          For depth to water, values are multiplied by −1 before standardizing, so a rising water table plots upward.</li>
+          For depth to water, values are multiplied by −1, so a rising water table plots upward.</li>
         <li><b>Composite:</b> for each year, the median (dashed) and mean (solid) across the wells with a value that year (for matched wells, the robust and least-squares fits), with area weighting when it is on. A year with fewer wells than <i>Min. wells per year</i> (default 5) is left empty and its bar turns red. Years with fewer than 10 wells get hollow markers.</li>
         <li><b>Uncertainty band:</b> 95% bootstrap range of the yearly median. Wells are resampled with replacement (default 200 draws, reduced automatically for very large selections; Efron and Tibshirani, 1993). It shows how much the result depends on which wells happen to be in the set, not measurement error.</li>
-        <li><b>Wells per year</b> (grey bars, right axis): the number of wells behind each plotted value (for matched wells, those connected to the rest). For chain-linked, the number of wells linking that year to its partner year.</li>
+        <li><b>Wells per year</b> (grey bars, right axis): the number of wells behind each plotted value (for matched wells, those connected to the rest).</li>
       </ol>
       <p>"Normalize per well" (feet anomaly or USGS % of range, N = −(x − mean)/(max − min) × 100; Myers, 2022, eq. 1) applies to the Overview plot only.</p>
 
       <h3 id="h-trend">Trends</h3>
       <ul>
-        <li><b>Theil–Sen slope</b> (Theil, 1950; Sen, 1968): the median of all pairwise slopes between years, in ft per year (or SD per year). Insensitive to outliers.</li>
+        <li><b>Theil–Sen slope</b> (Theil, 1950; Sen, 1968): the median of all pairwise slopes between years, in ft per year. Insensitive to outliers.</li>
         <li><b>Mann–Kendall test</b> (Mann, 1945; Kendall, 1975): the sign of every pair of years gives S; its variance is corrected for ties, and p is two-sided. Annual values are autocorrelated, so p-values are optimistic.</li>
         <li>Per well: the median slope across wells with a bootstrap 95% CI, the share of wells falling, and the number with p &lt; 0.05. For the composite: the Theil–Sen slope of the yearly median.</li>
       </ul>
@@ -1149,35 +1159,24 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <li><b>Season compare</b> draws the same wells using each season's months only.</li>
       </ul>
 
-      <h3 id="h-krig">Kriged basin average (OSE basins, HUC-8 and HUC-10)</h3>
-      <p>Selecting an OSE groundwater basin, HUC-8 or HUC-10 adds the <b>basin-average water level</b> to the chain-linked chart: an estimate of the average water-level change over the whole area, not just at the wells. It is an areal-average hydrograph, not a composite. It is precomputed with spatiotemporal regression kriging after Rawling (2021, rev. 2022, NMBGMR OFR-616):</p>
-      <ol>
-        <li><b>Data:</b> the API readings (pulled 2026-11-01) plus the published-report readings; pumping and other disturbed readings dropped; one value per well per year (median); wells at the same spot merged. Two seasons: winter (Nov–Feb, as in OFR-616) and all months.</li>
-        <li><b>Regional trend:</b> a polynomial of the first two principal components of easting, northing and land elevation. Outliers are removed when the standardized residual exceeds 2 and Cook's distance exceeds 4/<i>n</i> (Cook, 1977).</li>
-        <li><b>Space-time variogram</b> of the residuals: sum-metric model (Gräler et al., 2016), spherical in space, exponential in time, with a joint space-time term. Nuggets have floors so the model cannot become falsely certain.</li>
-        <li><b>Calibration:</b> leave-one-out cross-validation; standard errors are multiplied by √(mean squared normalized error), at least 1, so about 95% of left-out readings fall inside their 95% range.</li>
-        <li><b>Change from a base year:</b> block contrast kriging of the change in the areal mean between each year and the model area's best-measured year, over the part of the unit within 5 km of a well. OSE basins have their own model each (wells inside the basin or within 10 km of it; up to 4,000 readings per year; 64 averaging points, or 196 in basins over 10,000 km²). HUC-10s use their HUC-8's model. The band is ±1.96 standard errors.</li>
-        <li><b>Quality badge:</b> good, fair or poor, from cross-validation correlation, the calibration factor and a zigzag check. Where the line jumps from year to year more than its range allows (often wells from different aquifers measured in different years), the ranges are widened by that factor and a caution shows.</li>
-      </ol>
-      <p><b>HUC-12 map.</b> The same HUC-8 models are also block-kriged for each of the 3,213 New Mexico HUC-12 subwatersheds (16 averaging points each, over the part within 5 km of a well; boundaries from the EPA EnviroAtlas WBD_NP21 simplified layer). Turn on <i>Kriged water-level change by HUC-12</i> in Layers &amp; legend to colour them by the change between a reference year and any later year, and press ▶ to step through the years. A HUC-12 is faded and dashed when the change is smaller than the larger of the two years' 95% ranges (a rough test: the range of the change itself is not stored). Hover over one to read its change; click it for a popup with a Select button that shows its kriged line beside the composite. The HUC-12 values are estimates where wells are sparse; they add detail, not accuracy: averaging them by area gives back (approximately) the HUC-8 line.</p>
-      <p>The line is aligned to the composite at the model's base year (or the first shared year if the composite has no value then). It is read from <code>kriged/winter.json</code> / <code>kriged/ose_winter.json</code> when the season lies within Nov–Feb, otherwise from <code>kriged/all.json</code> / <code>kriged/ose_all.json</code>. Large OSE basins (Rio Grande, Roswell, San Juan) span very different areas, so their single average hides a lot; use HUC-8s or HUC-10s for detail. Rebuild scripts are listed in <code>kriged/README.md</code>.</p>
+      <p class="help-note"><b>Removed methods.</b> Normal-score (SGI) and z-score composites, chain-linked change and the kriged basin average were removed. Normal and z-scores rescale each well over its own record, so wells measured over different periods are not on the same scale: in a test where every well falls 1 ft/yr and half the wells are measured only after 1990, the z-score composite rises 0.9 SD from 1990 to 1998 while every well fell 8 ft. Chain-linked change does worse than matched wells when wells cluster (case B) and drifts where few wells link. The kriging was implemented correctly, but on real data its uncertainty had to be widened in half the basins, about a quarter of the models were rated poor, and every automatic fit stopped at a parameter limit, so the data could not pin the models down.</p>
 
       <h3 id="h-files">Your own files</h3>
       <ul>
         <li><b>Add readings from a file:</b> a CSV with <code>source</code> and <code>id</code> (or <code>feature_id</code>), <code>date</code> and <code>depth_to_water</code>, or the OFR-vs-API workbook. Readings are added to wells already in the tool and kept in your browser until removed.</li>
-        <li><b>Reference hydrograph:</b> a CSV of <code>year, change_ft[, se_ft]</code> drawn beside the chain-linked composite.</li>
+        <li><b>Reference hydrograph:</b> a CSV of <code>year, change_ft[, se_ft]</code> drawn beside the composite.</li>
         <li><b>Upload an area:</b> a polygon to select wells.</li>
       </ul>
 
       <h3 id="h-export">Exports</h3>
-      <p>Composite CSV (year, median, mean, band, wells per year, method; optionally per-well columns and the basin average), per-well statistics CSV (years, span, Theil–Sen, Mann–Kendall p, spike years dropped, cluster, site and 3DEP elevations, elevation check), raw readings CSV, the flagged-readings table, and a PNG of the chart with the method in its title block.</p>
+      <p>Composite CSV (year, median, mean, band, wells per year, method; optionally per-well columns), per-well statistics CSV (years, span, Theil–Sen, Mann–Kendall p, spike years dropped, cluster, site and 3DEP elevations, elevation check), raw readings CSV, the flagged-readings table, and a PNG of the chart with the method in its title block.</p>
 
       <h3 id="h-limits">Limitations</h3>
       <ul>
-        <li>Matched wells removes each well's own level (case A) but not differences in how places behave (case B). Watch for the composition warning and compare with the kriged average.</li>
+        <li>Matched wells removes each well's own level (case A) but not differences in how places behave (case B). Watch for the composition warning and compare with Area units.</li>
         <li>Mixing aquifers (for example shallow and artesian aquifers in the Roswell basin) blends different behaviour. Filter by aquifer or depth, or use hydrograph clusters.</li>
         <li>Thresholds (65 ft/yr, 5 years over 8, 5 wells per year, 60% coverage) are literature starting values (Jasechko et al., 2024; Bloomfield and Marchant, 2013; Bloomfield et al., 2015), not validated for New Mexico.</li>
-        <li>Mann–Kendall p-values ignore autocorrelation. Kriged averages smooth and can be dominated by one well where data are sparse.</li>
+        <li>Mann–Kendall p-values ignore autocorrelation.</li>
       </ul>
 
       <h3 id="h-refs">References</h3>
@@ -1186,16 +1185,11 @@ input[type="range"]{accent-color:var(--accent); width:100%;}
         <li>Blom, G., 1958, Statistical estimates and transformed beta-variables: New York, Wiley.</li>
         <li>Bloomfield, J.P., and Marchant, B.P., 2013, Analysis of groundwater drought building on the standardised precipitation index approach: Hydrology and Earth System Sciences, v. 17, p. 4769–4787.</li>
         <li>Bloomfield, J.P., Marchant, B.P., Bricker, S.H., and Morgan, R.B., 2015, Regional analysis of groundwater droughts using hydrograph classification: Hydrology and Earth System Sciences, v. 19, p. 4327–4344.</li>
-        <li>Cook, R.D., 1977, Detection of influential observation in linear regression: Technometrics, v. 19, p. 15–18.</li>
         <li>Efron, B., and Tibshirani, R.J., 1993, An introduction to the bootstrap: New York, Chapman &amp; Hall.</li>
-        <li>Gräler, B., Pebesma, E., and Heuvelink, G., 2016, Spatio-temporal interpolation using gstat: The R Journal, v. 8, p. 204–218.</li>
-        <li>Heuvelink, G.B.M., and Griffith, D.A., 2010, Space-time geostatistics for geography: Geographical Analysis, v. 42, p. 161–179.</li>
         <li>Jasechko, S., Seybold, H., Perrone, D., Fan, Y., Shamsudduha, M., Taylor, R.G., Fallatah, O., and Kirchner, J.W., 2024, Rapid groundwater decline and some cases of recovery in aquifers globally: Nature, v. 625, p. 715–721.</li>
         <li>Kendall, M.G., 1975, Rank correlation methods (4th ed.): London, Griffin.</li>
-        <li>Kyriakidis, P.C., and Journel, A.G., 1999, Geostatistical space-time models: a review: Mathematical Geology, v. 31, p. 651–684.</li>
         <li>Mann, H.B., 1945, Nonparametric tests against trend: Econometrica, v. 13, p. 245–259.</li>
         <li>Myers, N.C., 2022, Composite regional groundwater hydrographs for selected principal aquifers in New Mexico, 1980–2019: U.S. Geological Survey Open-File Report 2022–1008, 51 p., doi:10.3133/ofr20221008.</li>
-        <li>Rawling, G., 2021 (revised 2022), Evaluation of water-level trends using spatiotemporal kriging in the Mimbres Basin, southwest New Mexico: New Mexico Bureau of Geology and Mineral Resources Open-File Report 616.</li>
         <li>Sen, P.K., 1968, Estimates of the regression coefficient based on Kendall's tau: Journal of the American Statistical Association, v. 63, p. 1379–1389.</li>
         <li>Theil, H., 1950, A rank-invariant method of linear and polynomial regression analysis: Proceedings of the Royal Netherlands Academy of Sciences, v. 53, p. 386–392, 521–525, 1397–1412.</li>
         <li>U.S. Geological Survey, 3D Elevation Program (3DEP) elevation service: elevation.nationalmap.gov.</li>
@@ -1517,6 +1511,10 @@ async function dataBootstrap(){
     if(c && c.ver === CACHE_VER && c.rows && c.rows.length){ rows = c.rows; info.offline = true; }
     else { const d = apiState.siteDiag || {}; throw new Error('The API returned no usable wells (' + (d.features||0) + ' features received, ' + (d.total==null?'?':d.total) + ' reported). The service may be starting up; try again in a minute.'); }
   }
+  { const OW = await OCO_P;
+    if(OW){ const have = new Set(rows.filter(r => r[0] === 'NMBGMR').map(r => r[1]));
+      OW.forEach(w => { oco.ids.set(w.name, w.id); if(!have.has(w.name) && w.lon != null && w.lat != null){ rows.push(['NMBGMR', w.name, w.name, w.lon, w.lat, w.elevFt, w.depth, null, '', null, null]); oco.newWells++; } });
+      oco.wells = OW.length; } }
   const keyOf = r => r[0] + '\u0001' + r[1];
   const provIdx = new Map(); rows.forEach((r,i)=>provIdx.set(keyOf(r), i));
   const bareId = new Map(); rows.forEach((r,i)=>bareId.set(r[1], bareId.has(r[1]) ? -1 : i));
@@ -1608,12 +1606,61 @@ async function dataBootstrap(){
     agg.seen = null;
     return res;
   }
-  return {ui, info, sitesData:{sources, aquifers, formations, studyAreaNames:ENRICH.studyAreaNames, sites}, siteYear, siteMonth, collapse: pass => collapseAgg(agg, finalOf, pass), finalize: finalizeSiteRecs, addReadings};
+  // monthly values from another database: added only for months the well has no reading in yet
+  function addMonths(list){
+    // Ocotillo gives depth below the measuring point; the unified API gives depth below land surface.
+    // Per well, the offset is the median of (Ocotillo - unified) over months both have (at least 3);
+    // it is subtracted from that well's added months. Wells with fewer shared months are added unadjusted and counted.
+    const res = {added:0, had:0, noWell:0, wells:new Set(), adjWells:0, unadjWells:0, offsets:[]};
+    agg.seen = new Set();
+    const byWell = new Map();
+    for(const r of list){
+      const i = siteOf(r.source, r.id); if(i == null || !finalOf.has(i)){ res.noWell++; continue; }
+      let L = byWell.get(i); if(!L){ L = []; byWell.set(i, L); } L.push(r);
+    }
+    for(const [i, L] of byWell){
+      const diffs = [], fresh = [];
+      for(const r of L){
+        const base = (i*100000 + r.y*12 + (r.m-1))*64; let s = 0, n = 0;
+        for(let fl=0; fl<64; fl++){ const a = agg.mon.get(base + fl); if(a){ s += a[0]; n += a[1]; } }
+        if(n){ diffs.push(r.v - s/n); res.had++; } else fresh.push(r);
+      }
+      let off = 0;
+      if(diffs.length >= 3){ diffs.sort((a,b)=>a-b); const h = diffs.length >> 1; off = diffs.length % 2 ? diffs[h] : (diffs[h-1] + diffs[h])/2; res.offsets.push(off); if(fresh.length) res.adjWells++; }
+      else if(fresh.length) res.unadjWells++;
+      for(const r of fresh){
+        aggAdd(agg, i, r.y + '-' + String(r.m).padStart(2, '0') + '-15', 'oco', Math.round((r.v - off)*100)/100, 0);
+        res.added++; res.wells.add(finalOf.get(i));
+      }
+    }
+    agg.seen = null; return res;
+  }
+  return {ui, info, sitesData:{sources, aquifers, formations, studyAreaNames:ENRICH.studyAreaNames, sites}, siteYear, siteMonth, collapse: pass => collapseAgg(agg, finalOf, pass), finalize: finalizeSiteRecs, addReadings, addMonths};
 }
 function ringBBox2(r){ let a=Infinity,b=Infinity,c=-Infinity,d=-Infinity; for(const p of r){ if(p[0]<a)a=p[0]; if(p[0]>c)c=p[0]; if(p[1]<b)b=p[1]; if(p[1]>d)d=p[1]; } return [a,b,c,d]; }
 
 
 // ---- load wells + readings from the API (cached in this browser after the first visit)
+// ---- NMBGMR Ocotillo (OGC API) ----
+const OCO_ROOT = 'https://ocotillo-api.newmexicowaterdata.org';
+const oco = {key:'', header:'bearer', ids:new Map(), newWells:0, wells:0, status:'', fetched:new Map(), mem:new Map(), lastKey:null, busy:false};
+try{ localStorage.removeItem('ocoKey'); oco.key = sessionStorage.getItem('ocoKey') || ''; oco.header = localStorage.getItem('ocoKeyHeader') || 'bearer'; }catch(e){}
+function ocoOn(){ try{ return localStorage.getItem('ocoOff') !== '1'; }catch(e){ return true; } }
+function ocoBase(){ return OCO_ROOT + (oco.key ? '/ogcapi-internal' : '/ogcapi'); }
+function ocoHeaders(){ if(!oco.key) return {}; return {'Authorization': 'Bearer ' + oco.key}; }   // Ocotillo reads keys as a Bearer token
+async function ocoGet(path, ms){
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms || 60000);
+  try{ const r = await fetch(ocoBase() + path, {headers: ocoHeaders(), signal: ac.signal}); if(r.status === 204) return null; if(!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
+  finally{ clearTimeout(t); }
+}
+async function ocoWells(){
+  if(!ocoOn()) return null;
+  const [loc, ww] = await Promise.all([ocoGet('/collections/waterlevels/locations?f=json', 40000), ocoGet('/collections/water_wells/items?f=json&limit=50000&properties=name,elevation,well_depth', 40000).catch(() => null)]);
+  const meta = new Map(); ((ww && ww.features) || []).forEach(f => meta.set(f.properties.name, f.properties));
+  return ((loc && loc.features) || []).map(f => { const m = meta.get(f.properties.name) || {}, c = (f.geometry && f.geometry.coordinates) || [];
+    return {id: f.id, name: String(f.properties.name), lon: c[0], lat: c[1], elevFt: m.elevation != null ? m.elevation / 0.3048 : null, depth: m.well_depth != null ? Number(m.well_depth) : null}; });
+}
+const OCO_P = ocoWells().catch(e => { oco.status = 'Ocotillo could not be reached (' + (e.name === 'AbortError' ? 'timed out' : e.message) + '); only the unified API is used.'; return null; });
 const BOOT = await dataBootstrap();
 const SITES_DATA = BOOT.sitesData;           // {sources, aquifers, formations, studyAreaNames, sites:[[id,x,y,srcIdx,depth,nrec,firstYr,lastYr,min,max,mean,usgsId,aqIdx,fmIdx,elev,aqExtIdx[],studyAreaIdx[]], ...]}
 let SITE_YEAR = BOOT.siteYear;             // [[siteIdx, year, avg, n, min, max], ...] sorted by siteIdx,year
@@ -1646,11 +1693,11 @@ for(let s=0; s<NSITES; s++){
 function hasElevation(s){ return !isNaN(siteElevation[s]); }
 const escHtml = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // ---- precomputed kriged averages (kriged/ next to the page, or the published GitHub Pages copy) ----
-const KRIG_FALLBACK = 'https://steeltapejockey.github.io/WeaverAPI-Hydrograph-Explorer/kriged/';
+const KRIG_FALLBACK = 'https://steeltapejockey.github.io/WeaverAPI-Hydrograph-Explorer/boundaries/';   // boundary files (HUC-10, OSE basins)
 let krigBaseP = null; const krigFiles = new Map();
 function krigBase(){
   if(!krigBaseP) krigBaseP = (async()=>{
-    for(const b of ['kriged/', KRIG_FALLBACK]){
+    for(const b of ['boundaries/', KRIG_FALLBACK]){
       try{ const r = await fetch(b + 'index.json'); if(r.ok){ const j = await r.json(); if(j && j.units){ window._krigIndex = j; return b; } } }catch(e){}
     }
     return null;
@@ -1686,7 +1733,7 @@ async function krigUpdate(){
     const ALL = krigFiles.get(fname);
     let F, U;
     if(isH12){ const M8 = ALL && ALL.huc8 ? ALL.huc8[h8] : null, u = ALL && ALL.units ? ALL.units[huc] : null;
-      F = M8 ? {ok: M8.ok, note: M8.note, years: ALL.years, base_year: M8.base_year, n_wells: M8.n_wells, model: {loo_corr: M8.loo_corr, calibration_factor: M8.calibration_factor}} : null;
+      F = M8 ? {ok: M8.ok, note: M8.note, years: ALL.years, base_year: M8.base_year, n_wells: M8.n_wells, model: {loo_corr: M8.loo_corr, calibration_factor: M8.calibration_factor, withheld_wells_tested: M8.withheld_wells_tested, possible_bias: M8.possible_bias, withheld_wells_mean_error_ft: M8.withheld_wells_mean_error_ft}} : null;
       U = u ? {name: u.n, chg_ft: u.c, se_chg_ft: u.s, cover_km2: u.cov, area_km2: u.a, unstable: u.z > 1.2, note: u.z > 1.2 ? 'year-to-year jumps larger than the model expects; ranges widened ×' + u.z : ''} : (F ? {note: 'no wells within 5 km'} : null);
     } else { F = isOse ? (ALL && ALL.basin ? ALL.basin[huc] : null) : (ALL && ALL.huc8 ? ALL.huc8[h8] : null); U = F && F.units ? F.units[huc] : null; }
     if(!F || !F.ok || !U || !U.chg_ft){
@@ -1699,9 +1746,14 @@ async function krigUpdate(){
     const M = F.model || {};
     state.krig = {key, name: 'Basin-average water level (kriged, ' + (season === 'winter' ? 'Nov–Feb' : 'all months') + ')', rows, base: F.base_year, unit: U.name, cover: U.cover_km2, area: U.area_km2, model: M};
     const seasonNote = (season === 'all' && !(state.season.monthStart === 1 && state.season.monthEnd === 12)) ? ' There is no kriged set for this season, so the all-months set is shown.' : '';
-    const q = (M.loo_corr >= 0.9 && M.calibration_factor <= 2 && !U.unstable) ? 'good' : ((M.loo_corr >= 0.8 && M.calibration_factor <= 3) ? 'fair' : 'poor');
+    const tested = (M.withheld_wells_tested || 0) >= 20;
+    const q = (M.possible_bias || M.loo_corr < 0.8 || M.calibration_factor > 3) ? 'poor'
+      : (M.loo_corr >= 0.9 && M.calibration_factor <= 2 && !U.unstable && tested) ? 'good' : 'fair';
+    const calNote = tested ? ` Error ranges ×${M.calibration_factor}: the larger of a leave-one-out check and a test that withholds ${M.withheld_wells_tested} whole wells and checks that 95% of their measured changes fall inside the range.`
+      : ' Error ranges could not be checked by withholding wells (too few long records), so treat them as a minimum.';
+    const biasNote = M.possible_bias ? ` Caution: for withheld wells the measured changes differed from the kriged estimates by ${M.withheld_wells_mean_error_ft > 0 ? '+' : ''}${M.withheld_wells_mean_error_ft} ft on average, so this line may be biased.` : '';
     state.krig.quality = q;
-    if(st) st.innerHTML = `<b>Model quality: ${q}.</b> ` + escHtml(`${U.name}${isOse ? ' (OSE basin)' : ' (' + huc + ')'}: kriged ${season === 'winter' ? 'Nov–Feb' : 'all-months'} water-level change, ${y0}–${y0 + rows.length - 1}, relative to ${F.base_year} (${isOse ? 'the basin' : 'the HUC‑8'}'s best-measured year). Area covered: ${U.cover_km2.toLocaleString()} of ${U.area_km2.toLocaleString()} km² (within 5 km of a well). Model: ${F.n_wells.toLocaleString()} wells, cross-validation r = ${M.loo_corr}, ranges widened ×${M.calibration_factor}.` + (U.unstable ? ` Caution: ${U.note}.` : '') + seasonNote) + (otFeet(state.otp.method) ? ' Shown on the chart.' : ' <button class="btn" id="krig-to-chain" style="padding:2px 8px; margin-left:4px;">Show it: switch to matched wells (ft)</button>');
+    if(st) st.innerHTML = `<b>Model quality: ${q}.</b> ` + escHtml(`${U.name}${isOse ? ' (OSE basin)' : ' (' + huc + ')'}: kriged ${season === 'winter' ? 'Nov–Feb' : 'all-months'} water-level change, ${y0}–${y0 + rows.length - 1}, relative to ${F.base_year} (${isOse ? 'the basin' : 'the HUC‑8'}'s best-measured year). Area covered: ${U.cover_km2.toLocaleString()} of ${U.area_km2.toLocaleString()} km² (within 5 km of a well). Model: ${F.n_wells.toLocaleString()} wells, cross-validation r = ${M.loo_corr}.` + calNote + biasNote + (U.unstable ? ` Caution: ${U.note}.` : '') + seasonNote) + (otFeet(state.otp.method) ? ' Shown on the chart.' : ' <button class="btn" id="krig-to-chain" style="padding:2px 8px; margin-left:4px;">Show it: switch to matched wells (ft)</button>');
     const kb = document.getElementById('krig-to-chain'); if(kb) kb.onclick = ()=>{ state.otp.method = 'fe'; syncOtUi(); renderChart(); krigUpdate(); };
     renderChart();
   }catch(e){ if(st) st.textContent = 'Could not load the kriged average: ' + (e.message || e); }
@@ -2107,6 +2159,27 @@ async function litLoad(){
       (res.noWell ? `; ${res.noWell.toLocaleString()} for wells no longer in the API` : '') + '. They count as manual readings.';
   }catch(e){ if(st) st.textContent = 'Could not load literature-readings.csv: ' + (e.message || e); }
 }
+(() => {
+  const on = document.getElementById('oco-on'), k = document.getElementById('oco-key'), hd = document.getElementById('oco-key-header'), st = document.getElementById('oco-key-status');
+  on.checked = ocoOn(); k.value = oco.key; hd.value = oco.header;
+  ocoStatus(oco.status || (oco.wells ? `Ocotillo: ${oco.wells.toLocaleString()} wells with water levels${oco.key ? ' (with your key)' : ''}; ${oco.newWells.toLocaleString()} not in the unified API were added. Readings are fetched when you select an area.` : 'Ocotillo is off.'));
+  on.addEventListener('change', () => { try{ localStorage.setItem('ocoOff', on.checked ? '0' : '1'); }catch(e){} toast('Reloading…'); setTimeout(() => location.reload(), 400); });
+  const save = () => { const v = k.value.trim(); try{ sessionStorage.removeItem('ocoKey'); localStorage.removeItem('ocoKey'); if(v){ sessionStorage.setItem('ocoKey', v); } localStorage.setItem('ocoKeyHeader', hd.value); }catch(e){} };
+  k.addEventListener('change', () => { save(); toast('Reloading with the new key…'); setTimeout(() => location.reload(), 500); });
+  hd.addEventListener('change', save);
+  document.getElementById('oco-key-test').addEventListener('click', async () => {
+    const v = k.value.trim(); if(!v){ st.textContent = 'Paste a key first.'; return; }
+    st.textContent = 'Testing…';
+    const hdr = {'Authorization': 'Bearer ' + v};
+    try{
+      const pub = await fetch(OCO_ROOT + '/ogcapi/collections/waterlevels/locations?f=json').then(r => r.json()).then(j => j.features.length).catch(() => null);
+      const r = await fetch(OCO_ROOT + '/ogcapi-internal/collections/waterlevels/locations?f=json', {headers: hdr});
+      if(!r.ok){ st.textContent = `The private endpoint answered ${r.status} with this key${r.status === 404 || r.status === 401 || r.status === 403 ? ' (the key was not accepted: check it was copied whole; Ocotillo keys start with ocot_)' : ''}.`; return; }
+      const n = (await r.json()).features.length;
+      st.textContent = `Key works: ${n.toLocaleString()} wells with water levels with the key` + (pub != null ? ` (${pub.toLocaleString()} without it).` : '.') + ' Press Enter in the key box (or change it) to reload with it.';
+    }catch(e){ st.textContent = 'Test failed: ' + (e.message || e); }
+  });
+})();
 document.getElementById('lit-on').addEventListener('change', e => {
   try{ localStorage.setItem('litReadings', e.target.checked ? 'on' : 'off'); }catch(err){}
   toast('Reloading…'); setTimeout(() => location.reload(), 500);
@@ -2258,7 +2331,7 @@ const state = {
   chartHighlightSite: null,  // site index clicked in the spaghetti chart, rung on the map
   valueMode:'depth',      // 'depth' (depth-to-water) or 'elevation' (water-surface elevation)
   showAllWells:false,
-  krigShow:true,                   // draw the precomputed kriged average for HUC-8 / HUC-10 selections
+  krigShow:false,                  // draw the precomputed kriged average for HUC-8 / HUC-10 selections
   krig:null,                       // {name, rows:[{year, chg, se}], base, key}
   ref:null,                        // reference hydrograph overlay {name, rows:[{year, chg, se}]}
   useDem:true,                    // water-level elevation from USGS 3DEP land elevation instead of the site elevation
@@ -3208,10 +3281,11 @@ document.getElementById('colorby-select').addEventListener('change', e=>{
 document.getElementById('layer-counties').addEventListener('change', e=>{
   if(e.target.checked) countiesLayer.addTo(map); else map.removeLayer(countiesLayer);
 });
-document.getElementById('layer-h12krig').addEventListener('change', e=>{
-  h12State.on = e.target.checked;
+document.getElementById('layer-krigmap').addEventListener('change', e=>{
+  h12State.level = e.target.value; h12State.on = h12State.level !== 'off';
+  if(h12State.layer){ map.removeLayer(h12State.layer); h12State.layer = null; } h12State.featsFor = null; h12State.feats = null; h12State.units = null;
   if(h12State.on){ h12Panel(); syncH12(); }
-  else { if(h12State.timer){ clearInterval(h12State.timer); h12State.timer = null; } if(h12State.layer) map.removeLayer(h12State.layer); if(h12State.ctl){ map.removeControl(h12State.ctl); h12State.ctl = null; } }
+  else { if(h12State.timer){ clearInterval(h12State.timer); h12State.timer = null; } if(h12State.ctl){ map.removeControl(h12State.ctl); h12State.ctl = null; } }
 });
 document.getElementById('layer-ose').addEventListener('change', e=>{ if(e.target.checked) oseLayer.addTo(map); else map.removeLayer(oseLayer); });
 document.getElementById('ose-select').addEventListener('change', e=>{ if(e.target.value === '') return; selectOse(e.target.value); });
@@ -3378,7 +3452,7 @@ function identifyAt(latlng){
   if(map.hasLayer(aquiferExtentLayer)) IDENT_EXTENTS.forEach((pcs,i)=>{ if(pointInPieces(lng,lat,pcs)) out.extents.push(i); });
   if(map.hasLayer(studyAreaLayer)) IDENT_STUDY.forEach((pcs,i)=>{ if(pointInPieces(lng,lat,pcs)) out.studies.push(i); });
   if(map.hasLayer(countiesLayer)) out.county = countyFeatures.findIndex(f=> pointInPieces(lng,lat,(f._pieces||(f._pieces=piecesFromGeom(f.geometry)))));
-  if(h12State.on && h12State.geo){ const F = h12State.geo.features; out.h12 = F.findIndex(f=> pointInPieces(lng,lat,(f._pieces||(f._pieces=piecesFromGeom(f.geometry))))); }
+  if(h12State.on && h12State.feats){ out.h12 = h12State.feats.findIndex(x=> pointInPieces(lng,lat,(x.f._pieces||(x.f._pieces=piecesFromGeom(x.f.geometry))))); }
   if(map.hasLayer(oseLayer)) out.ose = oseFeatures.findIndex(f=> pointInPieces(lng,lat,(f._pieces||(f._pieces=piecesFromGeom(f.geometry)))));
   if(map.hasLayer(hucLayer)) out.huc = hucFeatures.findIndex(f=> pointInPieces(lng,lat,(f._pieces||(f._pieces=piecesFromGeom(f.geometry)))));
   return out;
@@ -3426,8 +3500,8 @@ function identifyPopupContent(h){
     });
   }
   if(h.h12>=0){
-    const f = h12State.geo.features[h.h12]; head('HUC-12 (kriged)');
-    row('#8b5cf6', f.properties.name, '(' + f.properties.huc12 + ') ' + h12Text(f.properties.huc12), ()=> setAreaSelection({type:'huc12', polygons: extractPolygonsFromGeoJSON(f), label:'HUC-12: ' + f.properties.name, huc: String(f.properties.huc12)}));
+    const x = h12State.feats[h.h12]; head(KM_LABEL[h12State.level] + ' (kriged)');
+    row('#8b5cf6', x.name, (h12State.level === 'ose' ? '' : '(' + x.code + ') ') + h12Text(x.code), ()=> kmSelect(x));
   }
   if(h.ose>=0){
     const f = oseFeatures[h.ose]; head('OSE groundwater basin');
@@ -3465,7 +3539,7 @@ map.on('click', e=>{
     if(h.extents.length) parts.push('<b>Aquifer extent:</b> '+h.extents.map(i=>AQUIFER_EXTENT_NAMES[i].replace(/_/g,' ')).join(' · '));
     if(h.studies.length) parts.push('<b>Study area:</b> '+h.studies.map(i=>STUDY_AREAS[i].name).join(' · '));
     if(h.county>=0) parts.push('<b>County:</b> '+countyFeatures[h.county].properties.NAME);
-    if(h.h12>=0){ const f = h12State.geo.features[h.h12]; parts.push('<b>HUC-12:</b> ' + escHtml(f.properties.name) + ' ' + escHtml(h12Text(f.properties.huc12))); }
+    if(h.h12>=0){ const x = h12State.feats[h.h12]; parts.push('<b>' + KM_LABEL[h12State.level] + ':</b> ' + escHtml(x.name) + ' ' + escHtml(h12Text(x.code))); }
     if(h.ose>=0) parts.push('<b>OSE basin:</b> '+escHtml(oseFeatures[h.ose].properties.Basin));
     if(h.huc>=0) parts.push('<b>HUC-8:</b> '+hucFeatures[h.huc].properties.name);
     box.innerHTML = parts.join('<br>'); box.classList.remove('hidden');
@@ -3893,7 +3967,7 @@ function otFixedEffects(maps, years, minN, km){
   byW.forEach((I, w) => { eff[w] = M.a[w] + (first >= 0 ? M.b[first] : 0); });
   return {med, mean, n, anchor:null, eff};
 }
-// HUC-10 of every well, from the kriged folder's huc10.geojson (or USGS WBD), computed once in the background
+// HUC-10 of every well, from boundaries/huc10.geojson (USGS WBD), computed once in the background
 let siteH10 = null, siteH10P = null; const h10Area = new Map();
 function ensureSiteH10(){
   if(siteH10P) return siteH10P;
@@ -3902,9 +3976,9 @@ function ensureSiteH10(){
     try{ const base = await krigBase(); if(base){ if(!window._huc10All){ const r = await fetch(base + 'huc10.geojson'); if(r.ok) window._huc10All = await r.json(); } gj = window._huc10All; } }catch(e){}
     if(!gj || !gj.features) return null;
     const idx = window._krigIndex && window._krigIndex.units ? new Map(window._krigIndex.units.filter(u => u.level === 'huc10').map(u => [u.huc, u.area_km2])) : new Map();
-    const P = gj.features.map(f => ({code: String(f.properties.huc10), pieces: piecesFromGeom(f.geometry)}));
+    const P = gj.features.map(f => ({code: String(f.properties.huc10), ar: +f.properties.areasqkm || 0, pieces: piecesFromGeom(f.geometry)}));
     P.forEach(p => { p.bb = p.pieces.reduce((b, q) => [Math.min(b[0], q.bbox[0]), Math.min(b[1], q.bbox[1]), Math.max(b[2], q.bbox[2]), Math.max(b[3], q.bbox[3])], [Infinity, Infinity, -Infinity, -Infinity]);
-      let a = idx.get(p.code); if(!a){ a = 0; p.pieces.forEach(q => { const r = q.rings[0]; let s = 0; for(let i=0, j=r.length-1; i<r.length; j=i++) s += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); a += Math.abs(s/2) * 111.32 * 110.57 * Math.cos(34.4*Math.PI/180); }); }
+      let a = idx.get(p.code) || p.ar; if(!a){ a = 0; p.pieces.forEach(q => { const r = q.rings[0]; let s = 0; for(let i=0, j=r.length-1; i<r.length; j=i++) s += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); a += Math.abs(s/2) * 111.32 * 110.57 * Math.cos(34.4*Math.PI/180); }); }
       h10Area.set(p.code, a || 1); });
     const out = new Array(NSITES).fill(null);
     for(let s=0; s<NSITES; s++){ const r = SITES[s]; if(r[1] == null || r[2] == null) continue; const x = r[1], y = r[2];
@@ -3936,43 +4010,78 @@ function otAreaUnits(maps, years, minN){
   if(f >= 0){ const m0 = med[f], a0 = mean[f]; for(let t=0;t<L;t++) if(med[t] != null){ med[t] -= m0; mean[t] -= a0; } }
   return {med, mean, n: nAll, anchor: null, eff: new Float64Array(maps.length).fill(NaN), unitsInfo: {units: units.length, huc10: groups.size, pooled: nShort, pooledInto: shortBy8.size}};
 }
-// ---- kriged HUC-12 map ----
+// ---- kriged change map (OSE basins, HUC-8, HUC-10, HUC-12) ----
 const H12_COLORS = ['#b2182b','#ef8a62','#fddbc7','#f7f7f7','#d1e5f0','#67a9cf','#2166ac'], H12_BREAKS = [-50,-20,-5,5,20,50];
-const h12State = {on:false, year:2026, ref:1980, geo:null, layer:null, ctl:null, timer:null};
-async function h12Data(){
+const KM_LABEL = {ose:'OSE basin', huc8:'HUC-8', huc10:'HUC-10', huc12:'HUC-12'};
+const h12State = {on:false, level:'off', year:2026, ref:1980, feats:null, units:null, layer:null, ctl:null, timer:null, featsFor:null};
+// units for the level: Map code -> {n, c (change ft, from years[0]), s (se ft)}, plus first year
+async function kmUnits(level){
   const base = await krigBase(); if(!base) return null;
-  const fname = 'h12_' + krigSeason() + '.json';
+  const season = krigSeason();
+  const fname = level === 'huc12' ? 'h12_' + season + '.json' : level === 'ose' ? 'ose_' + season + '.json' : season + '.json';
   if(!krigFiles.has(fname)){ try{ const r = await fetch(base + fname); krigFiles.set(fname, r.ok ? await r.json() : null); }catch(e){ krigFiles.set(fname, null); } }
-  return krigFiles.get(fname);
+  const D = krigFiles.get(fname); if(!D) return null;
+  const out = new Map(); let y0 = 1950;
+  if(level === 'huc12'){ y0 = D.years[0]; Object.entries(D.units).forEach(([k, u]) => out.set(k, {n:u.n, c:u.c, s:u.s})); }
+  else {
+    const top = level === 'ose' ? D.basin : D.huc8;
+    Object.values(top || {}).forEach(F => { if(F.years) y0 = F.years[0]; Object.entries(F.units || {}).forEach(([k, U]) => {
+      if(!U.chg_ft) return; if(level === 'huc8' && U.level !== 'huc8') return; if(level === 'huc10' && U.level !== 'huc10') return;
+      out.set(k, {n:U.name, c:U.chg_ft, s:U.se_chg_ft}); }); });
+  }
+  return {units: out, y0};
+}
+// polygons for the level: [{code, name, f}]
+async function kmFeatures(level){
+  if(level === 'huc8') return hucFeatures.map(f => ({code:String(f.properties.huc8), name:f.properties.name, f}));
+  if(level === 'ose') return oseFeatures.map(f => ({code:oseSlug(f.properties.Basin), name:f.properties.Basin, f}));
+  const base = await krigBase(); if(!base) return null;
+  if(level === 'huc10'){ if(!window._huc10All){ try{ const r = await fetch(base + 'huc10.geojson'); if(r.ok) window._huc10All = await r.json(); }catch(e){} }
+    return window._huc10All ? window._huc10All.features.map(f => ({code:String(f.properties.huc10), name:f.properties.name, f})) : null; }
+  if(!window._huc12All){ try{ const r = await fetch(base + 'huc12.geojson'); if(r.ok) window._huc12All = await r.json(); }catch(e){} }
+  return window._huc12All ? window._huc12All.features.map(f => ({code:String(f.properties.huc12), name:f.properties.name, f})) : null;
 }
 function h12Color(d){ let i = 0; while(i < H12_BREAKS.length && d > H12_BREAKS[i]) i++; return H12_COLORS[i]; }
-function h12Style(D, code){
-  const u = D && D.units[code]; const y0 = D ? D.years[0] : 1950;
-  if(!u) return {stroke:true, color:'#aaa', weight:0.2, opacity:0.4, fill:false};
-  const a = u.c[h12State.year - y0], b = u.c[h12State.ref - y0], sa = u.s[h12State.year - y0], sb = u.s[h12State.ref - y0];
-  if(a == null || b == null) return {stroke:true, color:'#aaa', weight:0.2, opacity:0.4, fill:false};
-  const d = a - b, unsure = 1.96 * Math.max(sa || 0, sb || 0) > Math.abs(d);
-  return {stroke:true, color: unsure ? '#888' : '#555', weight: unsure ? 0.3 : 0.5, dashArray: unsure ? '2,2' : null, fill:true, fillColor:h12Color(d), fillOpacity: unsure ? 0.25 : 0.8};
+function kmVal(code){
+  const U = h12State.units, u = U && U.units.get(code); if(!u) return null;
+  const i = h12State.year - U.y0, j = h12State.ref - U.y0, a = u.c[i], b = u.c[j];
+  if(a == null || b == null) return {u, none:true};
+  // 95% range of the change between the two years: both are changes from the model's base year, and their errors are
+  // positively correlated, so sqrt(se_a^2 + se_b^2) is an upper bound (exact when one of the years is the base year)
+  return {u, d: a - b, s: 1.96 * Math.sqrt((u.s[i] || 0) ** 2 + (u.s[j] || 0) ** 2)};
+}
+function h12Style(code){
+  const v = kmVal(code);
+  if(!v || v.none) return {stroke:true, color:'#aaa', weight:0.4, opacity:0.5, fill:false};
+  const unsure = v.s > Math.abs(v.d);
+  return {stroke:true, color: unsure ? '#888' : '#555', weight: unsure ? 0.4 : 0.6, dashArray: unsure ? '2,2' : null, fill:true, fillColor:h12Color(v.d), fillOpacity: unsure ? 0.25 : 0.8};
 }
 async function h12Redraw(){
-  const D = await h12Data();
-  const note = document.getElementById('h12-note');
-  if(!D){ if(note) note.textContent = 'The HUC-12 files (kriged/h12_all.json, h12_winter.json, huc12.geojson) were not found.'; return; }
-  if(!h12State.geo){ try{ const base = await krigBase(); const r = await fetch(base + 'huc12.geojson'); h12State.geo = r.ok ? await r.json() : null; }catch(e){} }
-  if(!h12State.geo){ if(note) note.textContent = 'Could not load kriged/huc12.geojson.'; return; }
-  if(!h12State.layer){
-    h12State.layer = L.geoJSON(h12State.geo, {pane:'refPane', style: f => h12Style(D, f.properties.huc12),
-      interactive:false});
+  const note = document.getElementById('h12-note'), lvl = h12State.level;
+  if(lvl === 'off') return;
+  const U = await kmUnits(lvl);
+  if(lvl !== h12State.level) return;
+  if(!U){ if(note) note.textContent = 'The kriged files for this level were not found in the kriged folder.'; return; }
+  h12State.units = U;
+  if(h12State.featsFor !== lvl){
+    const F = await kmFeatures(lvl); if(lvl !== h12State.level) return;
+    if(!F || !F.length){ if(note) note.textContent = 'Boundaries for this level are not loaded yet; try again in a moment.'; return; }
+    if(h12State.layer){ map.removeLayer(h12State.layer); h12State.layer = null; }
+    h12State.feats = F; h12State.featsFor = lvl;
+    h12State.layer = L.geoJSON({type:'FeatureCollection', features: F.map(x => Object.assign({}, x.f, {properties: Object.assign({}, x.f.properties, {_code: x.code})}))},
+      {pane:'refPane', interactive:false, style: f => h12Style(f.properties._code)});
   }
-  h12State.layer.setStyle(f => h12Style(D, f.properties.huc12));
-  if(h12State.on && !map.hasLayer(h12State.layer)) h12State.layer.addTo(map);
-  if(note){ const n = Object.keys(D.units).length; note.textContent = `${n.toLocaleString()} HUC-12s with an estimate (${krigSeason() === 'winter' ? 'Nov–Feb' : 'all months'}). Faded, dashed areas: the change is smaller than its 95% range. Grey outline: no estimate (no wells within 5 km).`; }
+  h12State.layer.setStyle(f => h12Style(f.properties._code));
+  if(!map.hasLayer(h12State.layer)) h12State.layer.addTo(map);
+  if(note){ const n = h12State.feats.filter(x => U.units.has(x.code)).length;
+    note.textContent = `${n.toLocaleString()} ${KM_LABEL[lvl]}${n === 1 ? '' : 's'} with an estimate (${krigSeason() === 'winter' ? 'Nov–Feb' : 'all months'}). Faded, dashed: the change is smaller than its 95% range. Grey outline: no estimate (no wells within 5 km). Hover for values; click to select.`; }
+  const t = document.getElementById('h12-title'); if(t) t.textContent = 'Kriged water-level change by ' + KM_LABEL[lvl];
 }
 function h12Panel(){
   if(h12State.ctl) return;
   const C = L.control({position:'bottomleft'});
   C.onAdd = () => { const d = L.DomUtil.create('div', 'h12-panel');
-    d.innerHTML = `<b>Kriged water-level change by HUC‑12</b>
+    d.innerHTML = `<b id="h12-title">Kriged water-level change</b>
       <div class="row2">From <select id="h12-ref"></select> to <b id="h12-yl">2026</b> <button class="btn" id="h12-play" style="padding:1px 8px;">▶</button></div>
       <div class="row2"><input type="range" id="h12-year" min="1951" max="2026" value="2026"></div>
       <div class="h12-legend">${H12_COLORS.map(c => `<span style="background:${c}"></span>`).join('')}</div>
@@ -3991,14 +4100,19 @@ function h12Panel(){
   });
 }
 function h12Text(code){
-  const D = krigFiles.get('h12_' + krigSeason() + '.json'), u = D && D.units[code];
-  if(!u) return '— no estimate (no wells within 5 km)';
-  const y0 = D.years[0], a = u.c[h12State.year - y0], b = u.c[h12State.ref - y0];
-  if(a == null || b == null) return '— no estimate for these years';
-  const s = 1.96 * Math.max(u.s[h12State.year - y0] || 0, u.s[h12State.ref - y0] || 0), d = a - b;
-  return `${h12State.ref}→${h12State.year}: ${d >= 0 ? '+' : ''}${d.toFixed(1)} ft (${d >= 0 ? 'rising' : 'falling'}; each year ±${s.toFixed(0)} ft)` + (s > Math.abs(d) ? ', not clearly different from no change' : '');
+  const v = kmVal(code);
+  if(!v) return '— no estimate (no wells within 5 km)';
+  if(v.none) return '— no estimate for these years';
+  return `${h12State.ref}→${h12State.year}: ${v.d >= 0 ? '+' : ''}${v.d.toFixed(1)} ft (${v.d >= 0 ? 'rising' : 'falling'}; 95% range ±${v.s.toFixed(0)} ft)` + (v.s > Math.abs(v.d) ? ', not clearly different from no change' : '');
 }
 function syncH12(){ const s = document.getElementById('h12-year'); if(s){ s.min = h12State.ref + 1; s.value = h12State.year; } const l = document.getElementById('h12-yl'); if(l) l.textContent = h12State.year; h12Redraw(); }
+function kmSelect(x){
+  const lvl = h12State.level, f = x.f;
+  if(lvl === 'huc8'){ const i = hucFeatures.indexOf(f); document.getElementById('huc-select').value = String(i); selectHuc8(i); return; }
+  if(lvl === 'ose'){ const i = oseFeatures.indexOf(f); document.getElementById('ose-select').value = String(i); selectOse(i); return; }
+  if(lvl === 'huc10'){ setAreaSelection({type:'huc10', polygons:extractPolygonsFromGeoJSON(f), label:'HUC-10: ' + x.name, huc:x.code}); return; }
+  setAreaSelection({type:'huc12', polygons:extractPolygonsFromGeoJSON(f), label:'HUC-12: ' + x.name, huc:x.code});
+}
 function otCompose(maps, years, mode, minN){
   const L = years.length, med = new Array(L).fill(null), mean = new Array(L).fill(null), n = new Array(L).fill(0);
   const km = state.otp.cellKm || 0;
@@ -4510,7 +4624,7 @@ function updateExplainPanel(result, set, allExcluded){
       ? `The composite is a chain of changes in feet, starting at 0: the chain starts at the best-measured year and each year is linked to the already-linked year that shares the most wells (earlier or later), and its step is the median change of the wells measured in both years.`
       : `Each well is then rescaled to ${o.method === 'ns' ? 'normal scores' : 'z-scores'} so deep and shallow wells count equally, and each year shows the median across wells (up = more water).`) +
     ` A year is drawn only if at least ${o.minN} wells have a value in it; a well counts in every year it was measured, and nothing is shifted between years or interpolated.`);
-  if(result && result.composition && result.composition.warn){ const S = result.composition.shift; parts.push(`Warning: where the measured wells are changes over the record (around ${S.from}–${S.to} their centre is about ${S.km.toFixed(0)} km from the centre of all wells, and their own trends differ from the rest by about ${Math.abs(S.dslope).toFixed(1)} ft/yr). No composite can correct for that; compare with the kriged basin average or split the area.`); }
+  if(result && result.composition && result.composition.warn){ const S = result.composition.shift; parts.push(`Warning: where the measured wells are changes over the record (around ${S.from}–${S.to} their centre is about ${S.km.toFixed(0)} km from the centre of all wells, and their own trends differ from the rest by about ${Math.abs(S.dslope).toFixed(1)} ft/yr). No composite can fully correct for that; try the Area units method or split the area.`); }
   if(o.cellKm) parts.push(`Area weighting is on: each year, wells in the same ${o.cellKm} km grid cell share one vote, so clusters of wells don't outweigh the rest of the area.`);
   if(result && result.fixedInfo){ const f = result.fixedInfo; parts.push(`Fixed well set: only wells measured within 2 years of ${f.wy0} and of ${f.wy1} and in at least ${f.pct}% of the years between (${f.need}+ years) are used: ${f.kept.toLocaleString()} wells kept, ${f.dropped.toLocaleString()} left out.` + (f.auto ? ` ${f.wy0}–${f.wy1} is the longest period that at least ${Math.max(o.minN,10)} wells cover this well; set the period slider to choose another.` : '')); }
   else if(o.fixed && !result && otLastDiag && otLastDiag.fixedInfo) parts.push(`Fixed well set: no well was measured near both ${otLastDiag.fixedInfo.wy0} and ${otLastDiag.fixedInfo.wy1} and in ${otLastDiag.fixedInfo.pct}% of the years between. Narrow the period with the slider or lower the share.`);
@@ -4622,6 +4736,50 @@ function renderAllWells(set){
   const el = document.getElementById('explain-text');
   if(el) el.textContent = `Overview mode: each of the ${shown.length} wells is drawn on its own with one value per year that has readings — no shared-year matching, no composite mean/median. ${noData ? noData+' selected well(s) have no readings under the current settings and are not shown. ' : ''}Click a line to highlight that well on the map and open its card (the card has a \"Plot this well & export\" button for its own hydrograph with CSV / GeoJSON / image export). Turn off "Overview" to return to the composite.`;
 }
+// Ocotillo readings for the selected NMBGMR wells
+const OCO_MAX = 400;
+function ocoStatus(msg){ const el = document.getElementById('oco-status'); if(el) el.textContent = msg; }
+async function ocoReadingsFor(sites){
+  const todo = [];
+  sites.forEach(s => { const r = SITES[s]; if(r[3] < 0 || SOURCES[r[3]] !== 'NMBGMR') return; const id = oco.ids.get(String(r[0])); if(id != null && !oco.fetched.has(id)) todo.push([id, String(r[0])]); });
+  if(!todo.length) return 0;
+  if(todo.length > OCO_MAX){ ocoStatus(`This selection has ${todo.length.toLocaleString()} Ocotillo wells; select a smaller area (up to ${OCO_MAX}) to add their readings.`); return 0; }
+  let done = 0, months = [], fails = 0;
+  const one = async ([id, name]) => {
+    try{
+      let M = null; const ck = 'oco:' + (oco.key ? 'k:' : '') + id;
+      if(oco.key) M = oco.mem.get(id) || null;
+      else try{ const c = await idbGet(ck); if(c && Date.now() - c.savedAt < 30*864e5) M = c.months; }catch(e){}
+      if(!M){
+        const d = await ocoGet('/collections/waterlevels/locations/' + id + '?f=json', 90000);
+        const by = new Map();
+        ((d && d.coverages) || []).forEach(cv => { const t = cv.domain.axes.t.values, R = cv.ranges, key = Object.keys(R)[0], v = R[key].values;
+          t.forEach((ts, k) => { const x = v[k]; if(x == null || !isFinite(x)) return; const y = +ts.slice(0, 4), m = +ts.slice(5, 7); const kk = y*100 + m; const a = by.get(kk); if(a){ a[0] += x; a[1]++; } else by.set(kk, [x, 1]); }); });
+        M = [...by].map(([kk, a]) => [Math.floor(kk/100), kk % 100, Math.round(a[0]/a[1]*100)/100]);
+        if(oco.key) oco.mem.set(id, M); else try{ idbSet(ck, {savedAt: Date.now(), months: M}); }catch(e){}
+      }
+      M.forEach(([y, m, v]) => months.push({source:'NMBGMR', id:name, y, m, v}));
+      oco.fetched.set(id, true);
+    }catch(e){ fails++; }
+    done++; if(done % 5 === 0 || done === todo.length) ocoStatus(`Fetching Ocotillo readings… ${done} of ${todo.length} wells`);
+  };
+  for(let i=0; i<todo.length; i+=4) await Promise.all(todo.slice(i, i+4).map(one));
+  const res = BOOT.addMonths(months);
+  oco.totAdded = (oco.totAdded || 0) + res.added; oco.totHad = (oco.totHad || 0) + res.had; oco.adj = (oco.adj || 0) + res.adjWells; oco.unadj = (oco.unadj || 0) + res.unadjWells; oco.offsets = (oco.offsets || []).concat(res.offsets);
+  ocoStatus(`Ocotillo: ${oco.wells.toLocaleString()} wells with water levels${oco.key ? ' (with your key)' : ''}; ${oco.newWells.toLocaleString()} not in the unified API were added. This session: ${oco.fetched.size.toLocaleString()} wells read, ${oco.totAdded.toLocaleString()} months added, ${oco.totHad.toLocaleString()} months skipped because the well already had a reading. Measuring-point offsets: ${oco.adj} wells adjusted (median offset ${ocoMedOff()} ft), ${oco.unadj} added unadjusted (fewer than 3 months shared with the unified API, so up to the measuring-point height too deep).` + (fails ? ` ${fails} wells could not be read (Ocotillo busy); they will be retried.` : ''));
+  if(fails) todo.forEach(([id]) => { if(!oco.fetched.has(id)) {} });
+  return res.added;
+}
+function ocoMedOff(){ const o = (oco.offsets || []).slice().sort((a,b)=>a-b); return o.length ? o[o.length >> 1].toFixed(2) : 'n/a'; }
+function ocoMaybe(){
+  if(!ocoOn() || !oco.ids.size || oco.busy) return;
+  const sel = state.areaSelection, key = (sel ? sel.label : '') + '|' + state.clickSelectedSites.size;
+  if(!sel && !state.clickSelectedSites.size) return;
+  if(key === oco.lastKey) return; oco.lastKey = key;
+  const sites = [...state.activeSet];
+  oco.busy = true;
+  setTimeout(async () => { try{ const n = await ocoReadingsFor(sites); if(n){ applyReadingQuality(); } }catch(e){ console.warn('ocotillo', e); } finally{ oco.busy = false; } }, 50);
+}
 let compChart = null;
 function renderCompStrip(result){
   const box = document.getElementById('comp-strip'), cap = document.getElementById('comp-caption');
@@ -4655,7 +4813,7 @@ function renderCompStrip(result){
             afterFit: ax => { if(chart && chart.scales.yN) ax.width = chart.scales.yN.width; } } } }
   });
   const S = C.shift;
-  const warnHtml = C.warn ? `<span style="display:block; margin-bottom:3px; padding:4px 8px; border-left:3px solid #b45309; background:rgba(180,83,9,.08); color:var(--ink-1);"><b>Warning: where the wells are changes.</b> Around ${S.from}–${S.to} the wells measured sit about ${S.km.toFixed(0)} km from the centre of all the wells (the wells are spread about ${S.rad.toFixed(0)} km around it), and those wells' own long-term trends differ from the rest by about ${Math.abs(S.dslope).toFixed(1)} ft/yr (typical well: ${S.sAll >= 0 ? '+' : ''}${S.sAll.toFixed(2)} ft/yr, + = rising). No composite can correct for this, matched wells included; trust the kriged basin average for those years, or split the area (Group by, HUC-10, or a smaller selection).</span>` : '';
+  const warnHtml = C.warn ? `<span style="display:block; margin-bottom:3px; padding:4px 8px; border-left:3px solid #b45309; background:rgba(180,83,9,.08); color:var(--ink-1);"><b>Warning: where the wells are changes.</b> Around ${S.from}–${S.to} the wells measured sit about ${S.km.toFixed(0)} km from the centre of all the wells (the wells are spread about ${S.rad.toFixed(0)} km around it), and those wells' own long-term trends differ from the rest by about ${Math.abs(S.dslope).toFixed(1)} ft/yr (typical well: ${S.sAll >= 0 ? '+' : ''}${S.sAll.toFixed(2)} ft/yr, + = rising). Matched wells cannot correct for this; use the Area units method, or split the area (Group by, HUC-10, or a smaller selection), and read those years with caution.</span>` : '';
   cap.innerHTML = warnHtml + escHtml(`Composition check: how the wells measured each year differ from the whole set. If the composite moves together with these lines, part of that change may come from which wells were measured, not from the water. ` +
     (mx ? `The typical ${dep ? 'depth to water' : 'water elevation'} of the measured wells swings by up to ${mx.toFixed(0)} ft from year to year; ` : '') +
     (state.otp.method === 'fe' ? 'the matched-wells composite already removes each well\'s own level, so these swings do not enter it.' : 'switch to matched wells to remove each well\'s own level from the composite.')) + (C.warn ? '' : ' <a id="comp-toggle">Hide ▴</a>');
@@ -4850,7 +5008,7 @@ function renderChart(){
   if(overlaysR.length && !groupsShown && !compareOn){
     for(const ov of overlaysR){
       const st = document.getElementById(ov.status), R = ov.R;
-      if(!otFeet(o.method)){ if(st && ov.slot === '_lastRef') st.textContent = `${R.name} is loaded; switch the composite to a feet method (matched wells or chain-linked) to see it.`; continue; }
+      if(!otFeet(o.method)){ if(st && ov.slot === '_lastRef') st.textContent = `${R.name} is loaded; switch the composite to matched wells or area units to see it.`; continue; }
       const sign = state.valueMode === 'elevation' ? 1 : -1;   // depth mode plots change in depth to water
       const byY = new Map(R.rows.map(r=>[r.year, r]));
       let k0 = -1;
@@ -4961,6 +5119,7 @@ function renderChart(){
 
   window._lastComposite = {labels, xvals, meanSeries, medianSeries, minSeries, maxSeries, nSeries, anchorSeries: result.anchorSeries, band: result.band, qualifying, poolSize, perWell, wells: result.wells, ids: qualifying.map(s=>SITES[s][0]), method: o.method, compTrend: result.compTrend, prov: null};
   try{ renderCompStrip(result); }catch(e){ console.warn('strip', e); }
+  try{ ocoMaybe(); }catch(e){ console.warn('oco', e); }
   document.getElementById('despike-removed-note').textContent = state.despike.enabled
     ? (despikeRemoved > 0 ? `${despikeRemoved} likely bad reading(s) removed from wells in this composite.` : 'No likely bad readings found in this composite.')
     : '';
@@ -4997,7 +5156,8 @@ function hexA(hex, a){
 /* -------------------------------------------------------------------- */
 /* 15. Export CSV                                                        */
 /* -------------------------------------------------------------------- */
-function downloadCsv(filename, rows){
+function ocoPrivateName(f){ try{ return (typeof oco !== 'undefined' && oco.key && oco.fetched && oco.fetched.size) ? 'PRIVATE_' + f : f; }catch(e){ return f; } }
+function downloadCsv(filename, rows){ filename = ocoPrivateName(filename);
   const csv = rows.map(r => r.map(v=>{
     if(v==null) return '';
     let s = String(v);
@@ -5246,7 +5406,7 @@ function singleWellGeoJSON(s, flag, method){
       yearly_values: d.yearly.map(y=>({year:y.year, depth_to_water_ft:r2(y.depth), water_surface_elev_ft:r2(y.elev), n_readings:y.n}))
     }}]};
 }
-function downloadBlob(filename, blob){
+function downloadBlob(filename, blob){ filename = ocoPrivateName(filename);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
